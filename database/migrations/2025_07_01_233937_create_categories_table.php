@@ -20,8 +20,11 @@ return new class() extends Migration
             $table->string('slug')
                 ->unique()
                 ->comment('URL-friendly identifier.');
+            $table->unsignedInteger('position')->default(0);
             $table->boolean('is_active')->default(true);
+
             $table->timestamps();
+
         });
     }
 

@@ -14,6 +14,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        if (app()->isLocal()) {
+            $this->call([
+                CategorySeeder::class,
+            ]);
+        }
 
         $this->call([
             AdminSeeder::class,

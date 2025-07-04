@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Http\Middleware\ForceJsonResponse;
+use App\Exceptions\ApiExceptionHandler;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -14,13 +14,14 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__ . '/../routes/api.php',
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
+        apiPrefix: 'api/v1'
     )
     ->withMiddleware(callback: function (Middleware $middleware): void {
         $middleware->api(prepend: [
             SetLocale::class,
-            ForceJsonResponse::class,
         ]);
 
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->render(using: [ApiExceptionHandler::class, 'handle']);
     })->create();
