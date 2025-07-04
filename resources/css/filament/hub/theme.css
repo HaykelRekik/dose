@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@tailwind variants;
+@import '../../../../vendor/filament/filament/resources/css/base.css';
+
+@config 'tailwind.config.js';
+/** Applies a blur effect to modals */
+
+
+.fi-modal-close-overlay {
+    @apply backdrop-blur-sm;
+}
+
+
+/** Custom scrollbar to scrollable sections */
+@media (min-width: 768px) {
+    ::-webkit-scrollbar {
+        height: 5px;
+        width: 5px
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #e5e7eb
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #d1d5db
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #c9cbcd
+    }
+
+    .dark ::-webkit-scrollbar-track {
+        background: #101215
+    }
+
+    .dark ::-webkit-scrollbar-thumb {
+        background: #1f2126
+    }
+
+    .dark ::-webkit-scrollbar-thumb:hover {
+        background: #1a1d21
+    }
+
+    @supports (-moz-appearance: none) {
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #d1d5db #e5e7eb;
+        }
+
+        .dark,
+        .dark * {
+            scrollbar-color: #1f2126 #101215;
+        }
+    }
+}
+
+/** Adds a border bottom to navigation groups label */
+.fi-sidebar-group-button {
+    margin-bottom: 0.3rem;
+}
+
+/**
+TopBar Color
+ */
+
+.fi-topbar {
+    background-color: rgba(248, 249, 250, .7) !important;
+}
+
+/** Normal font-weight for new riyal symbol */
+
+.icon-saudi_riyal::before {
+    font-weight: 500;
+}
