@@ -7,6 +7,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -19,7 +20,7 @@ class ProductController extends Controller
             ->active()
             ->when(
                 request()->filled('category'),
-                fn ($query) => $query->withWhereHas('categories', fn ($query) => $query->where('slug', request('category'))),
+                fn (Builder $query) => $query->withWhereHas('categories', fn ($query) => $query->where('slug', request('category'))),
             )
             ->get();
 
