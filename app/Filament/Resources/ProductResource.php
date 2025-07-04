@@ -19,7 +19,7 @@ class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
+    protected static ?string $navigationIcon = 'phosphor-command-duotone';
 
     public static function form(Form $form): Form
     {
@@ -68,7 +68,7 @@ class ProductResource extends Resource
                             ->relationship(
                                 name: 'categories',
                                 titleAttribute: 'name_' . app()->getLocale(),
-                                modifyQueryUsing: fn ($query) => $query->where('is_active', true)->orderBy('position', 'asc')
+                                modifyQueryUsing: fn($query) => $query->where('is_active', true)->orderBy('position', 'asc')
                             )
                             ->multiple()
                             ->preload()
@@ -91,7 +91,7 @@ class ProductResource extends Resource
                     ->schema([
                         Repeater::make('optionGroups')
                             ->relationship()
-                            ->itemLabel(fn (array $state): ?string => $state['name_' . app()->getLocale()] ?? null)
+                            ->itemLabel(fn(array $state): ?string => $state['name_' . app()->getLocale()] ?? null)
                             ->reorderable()
                             ->schema([
                                 Forms\Components\Grid::make(4)
@@ -119,7 +119,7 @@ class ProductResource extends Resource
                                 Repeater::make('options')
                                     ->relationship()
                                     ->reorderable()
-                                    ->itemLabel(fn (array $state): ?string => $state['name_' . app()->getLocale()] ?? null)
+                                    ->itemLabel(fn(array $state): ?string => $state['name_' . app()->getLocale()] ?? null)
                                     ->schema([
                                         Forms\Components\TextInput::make('name_en')
                                             ->label(__('Option Name (EN)'))
@@ -167,22 +167,27 @@ class ProductResource extends Resource
                 Tables\Columns\ImageColumn::make('image_url')
                     ->label(__('Image'))
                     ->circular(),
-                Tables\Columns\TextColumn::make('name_en')
-                    ->label(__('Name'))
+                Tables\Columns\TextColumn::make('name_' . app()->getLocale())
+                    ->label(__('Product Name'))
+                    ->searchable(['name_en', 'name_ar']),
+                Tables\Columns\TextColumn::make('categories.name_' . app()->getLocale())
+                    ->label(__('Categories'))
+                    ->badge()
+                    ->color('info')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('price')
-                    ->money('SAR')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('estimated_preparation_time')
-                    ->label('Prep Time')
-                    ->suffix(' min')
-                    ->default(5)
-                    ->sortable(),
+                    ->label(__('Price'))
+                    ->numeric(locale: 'en'),
+
                 Tables\Columns\IconColumn::make('is_active')
+                    ->label(__('Availability'))
                     ->boolean(),
             ])
-            ->actions([Tables\Actions\EditAction::make()])
-            ->bulkActions([Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()])]);
+            ->actions([
+                Tables\Actions\EditAction::make()
+            ])
+            ->bulkActions([
+            ]);
     }
 
     public static function getPages(): array
@@ -199,5 +204,15 @@ class ProductResource extends Resource
         return [
 
         ];
+    }
+
+    public static function getLabel(): ?string
+    {
+        return __('Product');
+    }
+
+    public static function getPluralLabel(): ?string
+    {
+        return __('Products');
     }
 }

@@ -269,5 +269,10 @@
     "Available Options?": "هل الخيارات متوفرة؟",
     "Options / Choices": "الخيارات / الاختيارات",
     "Option Groups": "مجموعات الخيارات",
-    "Name": "الاسم"
+    "Name": "الاسم",
+    "Product": "منتج",
+    "Products": "المنتجات",
+    "Product Name": "اسم المنتج",
+    "Availability": "التوفر"
+
 }
