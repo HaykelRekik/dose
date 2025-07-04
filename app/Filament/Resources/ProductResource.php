@@ -26,41 +26,125 @@ class ProductResource extends Resource
         return $form->schema([
             Wizard::make([
                 Wizard\Step::make(__('Basic Info'))
+                    ->icon('phosphor-squares-four-duotone')
                     ->schema([
-                        Forms\Components\TextInput::make('name_en')->label(__('Name (English)'))->required(),
-                        Forms\Components\TextInput::make('name_ar')->label(__('Name (Arabic)'))->required(),
-                        Forms\Components\Textarea::make('description_en')->label(__('Description (English)'))->columnSpanFull(),
-                        Forms\Components\Textarea::make('description_ar')->label(__('Description (Arabic)'))->columnSpanFull(),
+                        Forms\Components\TextInput::make('name_en')
+                            ->label(__('Name (English)'))
+                            ->required(),
+                        Forms\Components\TextInput::make('name_ar')
+                            ->label(__('Name (Arabic)'))
+                            ->required(),
+                        Forms\Components\Textarea::make('description_en')
+                            ->label(__('Description (English)'))
+                            ->autosize(),
+                        Forms\Components\Textarea::make('description_ar')
+                            ->label(__('Description (Arabic)'))
+                            ->autosize(),
+                        Forms\Components\FileUpload::make('image_url')
+                            ->label(__('Product Image'))
+                            ->image()
+                            ->required()
+                            ->directory('products')
+                            ->columnSpanFull(),
                     ])->columns(2),
 
                 Wizard\Step::make(__('Pricing & Details'))
+                    ->icon('phosphor-tag-duotone')
                     ->schema([
-                        Forms\Components\TextInput::make('price')->label(__('Base Price'))->required()->numeric()->prefix('SAR'),
-                        Forms\Components\TextInput::make('estimated_preparation_time')->label(__('Prep Time (minutes)'))->required()->numeric()->suffix('min'),
-                        Forms\Components\Select::make('categories')->label(__('Categories'))->relationship('categories', 'name_en')->multiple()->preload()->required(),
-                        Forms\Components\FileUpload::make('image_url')->image()->directory('products')->label(__('Product Image')),
-                        Forms\Components\Toggle::make('is_active')->label(__('Active'))->default(true),
-                    ])->columns(2),
+                        Forms\Components\TextInput::make('price')
+                            ->label(__('Price'))
+                            ->required()
+                            ->numeric()
+                            ->minValue(0)
+                            ->suffix('SAR'),
+                        Forms\Components\TextInput::make('estimated_preparation_time')
+                            ->label(__('Estimated preparation time'))
+                            ->required()
+                            ->numeric()
+                            ->suffix(__('mins')),
+                        Forms\Components\Select::make('categories')
+                            ->label(__('Categories'))
+                            ->relationship(
+                                name: 'categories',
+                                titleAttribute: 'name_' . app()->getLocale(),
+                                modifyQueryUsing: fn($query) => $query->where('is_active', true)->orderBy('position', 'asc')
+                            )
+                            ->multiple()
+                            ->preload()
+                            ->required(),
+
+                        Forms\Components\ToggleButtons::make('is_active')
+                            ->label(__('Product availability'))
+                            ->required()
+                            ->boolean(
+                                trueLabel: __('Available'),
+                                falseLabel: __('Not Available'),
+                            )
+                            ->grouped()
+                            ->default(true),
+                    ])
+                    ->columns(2),
 
                 Wizard\Step::make(__('Customization Options'))
+                    ->icon('phosphor-sparkle-duotone')
                     ->schema([
-                        Repeater::make('optionGroups')->relationship()->schema([
-                            Forms\Components\Grid::make(2)->schema([
-                                Forms\Components\TextInput::make('name_en')->label(__('Group Name (EN)'))->required(),
-                                Forms\Components\TextInput::make('name_ar')->label(__('Group Name (AR)'))->required(),
-                            ]),
-                            Forms\Components\Toggle::make('is_required')->label(__('Is this group required?'))->default(true),
-                            Forms\Components\Select::make('type')->label(__('Selection Type'))->options(ProductOptionGroupType::class)->required()->default(ProductOptionGroupType::SINGLE_SELECT),
+                        Repeater::make('optionGroups')
+                            ->relationship()
+                            ->itemLabel(fn(array $state): ?string => $state['name_en'] ?? null)
+                            ->reorderable()
+                            ->schema([
+                                Forms\Components\Grid::make(4)
+                                    ->schema([
+                                        Forms\Components\TextInput::make('name_en')
+                                            ->label(__('Group Name (EN)'))
+                                            ->required()
+                                            ->live(onBlur: true),
+                                        Forms\Components\TextInput::make('name_ar')
+                                            ->label(__('Group Name (AR)'))
+                                            ->required(),
 
-                            Repeater::make('options')->relationship()->schema([
-                                Forms\Components\TextInput::make('name_en')->label(__('Option Name (EN)'))->required(),
-                                Forms\Components\TextInput::make('name_ar')->label(__('Option Name (AR)'))->required(),
-                                Forms\Components\TextInput::make('extra_price')->label(__('Extra Price'))->numeric()->prefix('SAR')->default(0.00),
-                                Forms\Components\Toggle::make('is_available')->label(__('Available'))->default(true),
-                            ])->columns(2)->collapsible()->label(__('Options / Choices'))->defaultItems(1),
-                        ])->collapsible()->cloneable()->label(__('Option Groups')),
+                                        Forms\Components\ToggleButtons::make('type')
+                                            ->label(__('Selection Type'))
+                                            ->options(ProductOptionGroupType::class)
+                                            ->required()
+                                            ->default(ProductOptionGroupType::SINGLE_SELECT),
+
+                                        Forms\Components\ToggleButtons::make('is_required')
+                                            ->label(__('Is this group required?'))
+                                            ->boolean()
+                                            ->default(true),
+                                    ]),
+
+                                Repeater::make('options')
+                                    ->relationship()
+                                    ->reorderable()
+                                    ->schema([
+                                        Forms\Components\TextInput::make('name_en')
+                                            ->label(__('Option Name (EN)'))
+                                            ->required(),
+                                        Forms\Components\TextInput::make('name_ar')
+                                            ->label(__('Option Name (AR)'))
+                                            ->required(),
+                                        Forms\Components\TextInput::make('extra_price')
+                                            ->label(__('Extra Price'))
+                                            ->numeric()
+                                            ->prefix('SAR')
+                                            ->default(0.00),
+                                        Forms\Components\Toggle::make('is_available')
+                                            ->label(__('Available'))
+                                            ->default(true),
+                                    ])
+                                    ->columns(2)
+                                    ->collapsible()
+                                    ->label(__('Options / Choices'))
+                                    ->defaultItems(1),
+                            ])
+                            ->collapsible()
+                            ->cloneable()
+                            ->label(__('Option Groups')),
                     ]),
-            ])->columnSpanFull(),
+            ])
+                ->columnSpanFull(),
         ]);
     }
 
@@ -68,11 +152,22 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\ImageColumn::make('image_url')->label(__('Image'))->circular(),
-                Tables\Columns\TextColumn::make('name_en')->label(__('Name'))->searchable(),
-                Tables\Columns\TextColumn::make('price')->money('SAR')->sortable(),
-                Tables\Columns\TextColumn::make('estimated_preparation_time')->label('Prep Time')->suffix(' min')->sortable(),
-                Tables\Columns\IconColumn::make('is_active')->boolean(),
+                Tables\Columns\ImageColumn::make('image_url')
+                    ->label(__('Image'))
+                    ->circular(),
+                Tables\Columns\TextColumn::make('name_en')
+                    ->label(__('Name'))
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('price')
+                    ->money('SAR')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('estimated_preparation_time')
+                    ->label('Prep Time')
+                    ->suffix(' min')
+                    ->default(5)
+                    ->sortable(),
+                Tables\Columns\IconColumn::make('is_active')
+                    ->boolean(),
             ])
             ->actions([Tables\Actions\EditAction::make()])
             ->bulkActions([Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()])]);

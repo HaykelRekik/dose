@@ -2,12 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 @tailwind variants;
-@import '../../../../vendor/filament/filament/resources/css/base.css';
 
 @config 'tailwind.config.js';
 /** Applies a blur effect to modals */
-
-
 .fi-modal-close-overlay {
     @apply backdrop-blur-sm;
 }

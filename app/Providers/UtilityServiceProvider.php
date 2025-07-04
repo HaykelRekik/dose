@@ -50,6 +50,8 @@ class UtilityServiceProvider extends ServiceProvider
          * Add icon to create new record
          */
         CreateAction::configureUsing(modifyUsing: fn (CreateAction $action): CreateAction => $action->icon('phosphor-plus-circle-duotone'));
+        /** Configure Edit  Action Color */
+        EditAction::configureUsing(modifyUsing: fn (EditAction $action): EditAction => $action->color(Color::hex('#80249f')));
 
         /**
          * Set All Selects to use choices.js
@@ -81,6 +83,7 @@ class UtilityServiceProvider extends ServiceProvider
             ->formatAsYouType()
             ->onlyCountries(['SA'])
             ->validateFor(['SA'])
+            ->initialCountry('SA')
             ->autoPlaceholder('aggressive'));
 
         /**
@@ -93,9 +96,9 @@ class UtilityServiceProvider extends ServiceProvider
          */
         Wizard::configureUsing(modifyUsing: fn (Wizard $wizard): Wizard => $wizard->skippable(app()->environment('local')));
 
-        /** Configure Edit  Action Color */
-        EditAction::configureUsing(modifyUsing: fn (EditAction $action): EditAction => $action->color(Color::hex('#80249f')));
-
+        /**
+         * Configure alignment of toggle buttons
+         */
         ToggleButtons::configureUsing(modifyUsing: fn (ToggleButtons $toggleButtons): ToggleButtons => $toggleButtons->inline(true));
     }
 }
