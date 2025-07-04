@@ -68,7 +68,7 @@ class ProductResource extends Resource
                             ->relationship(
                                 name: 'categories',
                                 titleAttribute: 'name_' . app()->getLocale(),
-                                modifyQueryUsing: fn($query) => $query->where('is_active', true)->orderBy('position', 'asc')
+                                modifyQueryUsing: fn ($query) => $query->where('is_active', true)->orderBy('position', 'asc')
                             )
                             ->multiple()
                             ->preload()
@@ -91,7 +91,7 @@ class ProductResource extends Resource
                     ->schema([
                         Repeater::make('optionGroups')
                             ->relationship()
-                            ->itemLabel(fn(array $state): ?string => $state['name_' . app()->getLocale()] ?? null)
+                            ->itemLabel(fn (array $state): ?string => $state['name_' . app()->getLocale()] ?? null)
                             ->reorderable()
                             ->schema([
                                 Forms\Components\Grid::make(4)
@@ -119,7 +119,7 @@ class ProductResource extends Resource
                                 Repeater::make('options')
                                     ->relationship()
                                     ->reorderable()
-                                    ->itemLabel(fn(array $state): ?string => $state['name_' . app()->getLocale()] ?? null)
+                                    ->itemLabel(fn (array $state): ?string => $state['name_' . app()->getLocale()] ?? null)
                                     ->schema([
                                         Forms\Components\TextInput::make('name_en')
                                             ->label(__('Option Name (EN)'))

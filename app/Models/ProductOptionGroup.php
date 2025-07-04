@@ -22,6 +22,8 @@ class ProductOptionGroup extends Model
         'is_required',
     ];
 
+    protected array $translatable = ['name'];
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

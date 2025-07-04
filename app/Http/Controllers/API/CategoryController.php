@@ -15,6 +15,7 @@ class CategoryController extends Controller
         $categories = Category::query()
             ->active()
             ->orderBy('position')
+            ->with(['products' => fn ($query) => $query->active()])
             ->withCount('products')
             ->get();
 
@@ -26,9 +27,13 @@ class CategoryController extends Controller
 
     public function show(Category $category)
     {
+        $category
+            ->load(['products' => fn ($query) => $query->active()])
+            ->loadCount(['products' => fn ($query) => $query->active()]);
+
         return response()->success(
             message: 'Category fetched successfully.',
-            data: CategoryResource::make($category->loadCount('products'))
+            data: CategoryResource::make($category)
         );
     }
 }

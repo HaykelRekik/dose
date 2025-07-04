@@ -19,6 +19,7 @@ class CategoryResource extends JsonResource
             'slug' => $this->slug,
             'is_active' => (bool) $this->is_active,
             'products_count' => $this->whenCounted('products'),
+            'products' => ProductResource::collection($this->whenLoaded('products')),
         ];
     }
 }

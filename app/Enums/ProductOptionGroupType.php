@@ -9,7 +9,7 @@ use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasLabel;
 
-enum ProductOptionGroupType: string implements HasIcon, HasLabel , HasColor
+enum ProductOptionGroupType: string implements HasColor, HasIcon, HasLabel
 {
     case SINGLE_SELECT = 'single';
     case MULTI_SELECT = 'multi';
