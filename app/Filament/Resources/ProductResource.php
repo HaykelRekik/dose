@@ -55,6 +55,7 @@ class ProductResource extends Resource
                             ->label(__('Price'))
                             ->required()
                             ->numeric()
+                            ->maxLength(null)
                             ->minValue(0)
                             ->suffix('SAR'),
                         Forms\Components\TextInput::make('estimated_preparation_time')
@@ -129,8 +130,9 @@ class ProductResource extends Resource
                                             ->label(__('Extra Price'))
                                             ->numeric()
                                             ->prefix('SAR')
+                                            ->maxLength(null)
                                             ->default(0.00),
-                                        Forms\Components\Toggle::make('is_available')
+                                        Forms\Components\Toggle::make('is_active')
                                             ->label(__('Available'))
                                             ->default(true),
                                     ])
