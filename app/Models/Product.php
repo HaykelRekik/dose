@@ -5,29 +5,34 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Traits\HasTranslations;
+use App\Traits\IsActivable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
-    use HasFactory, HasTranslations;
+    use HasFactory, HasTranslations, IsActivable;
+
+    protected array $translatable = ['name', 'description'];
 
     protected $fillable = [
         'name_en',
         'name_ar',
         'description_en',
         'description_ar',
-        'base_price',
+        'price',
+        'estimated_preparation_time',
         'image_url',
         'is_active',
     ];
 
-    protected array $translatable = [
-        'name',
-        'description',
+    protected $casts = [
+        'price' => 'decimal:2',
+        'is_active' => 'boolean',
     ];
 
     protected $appends = ['image_path'];
@@ -37,22 +42,15 @@ class Product extends Model
         return $this->belongsToMany(Category::class);
     }
 
-    protected function casts(): array
+    public function optionGroups(): HasMany
     {
-        return [
-            'base_price' => 'decimal:2',
-            'is_active' => 'boolean',
-        ];
+        return $this->hasMany(ProductOptionGroup::class);
     }
 
     protected function imagePath(): Attribute
     {
-        return Attribute::make(get: fn (): ?string => $this->attributes['image_url'] ? Storage::disk('public')->url($this->attributes['image_url']) : null);
+        return Attribute::make(
+            get: fn (): ?string => Storage::disk('public')->url($this->attributes['image_url'])
+        );
     }
-    //
-    //    public function optionGroups(): HasMany
-    //    {
-    //        return $this->hasMany(ProductOptionGroup::class);
-    //    }
-
 }

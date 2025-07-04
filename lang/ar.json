@@ -243,5 +243,7 @@
     "Status": "الحالة",
     "product": "منتج",
     "Products count": "عدد المنتجات",
-    "Product Categories": "تصنيفات المنتجات"
+    "Product Categories": "تصنيفات المنتجات",
+    "Activated ?" : "مُفعّل ؟",
+    "If activated, the category will be visible in the application." : "في حالة التفعيل، سيكون التصنيف مرئيًا في التطبيق."
 }

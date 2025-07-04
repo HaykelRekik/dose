@@ -26,7 +26,7 @@ class CategorySeeder extends Seeder
                 'name_ar' => $category['ar'],
                 'position' => $index,
                 'slug' => Str::slug($category['en']),
-                'is_active' => fake()->boolean(chanceOfGettingTrue: 80),
+                'is_active' => fake()->boolean(chanceOfGettingTrue: 70),
                 'created_at' => now(),
                 'updated_at' => now(),
             ];

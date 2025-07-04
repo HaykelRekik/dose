@@ -23,6 +23,7 @@ class Category extends Model
         'name_en',
         'slug',
         'position',
+        'is_active',
     ];
 
     protected array $translatable = ['name'];

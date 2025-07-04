@@ -44,6 +44,12 @@ class CategoryResource extends Resource
                             ->unique(Category::class, 'slug', ignoreRecord: true)
                             ->helperText(__('A unique, URL-friendly identifier.')),
 
+                        Forms\Components\ToggleButtons::make('is_active')
+                            ->label(__('Activated ?'))
+                            ->boolean()
+                            ->default(true)
+                            ->helperText(__('If activated, the category will be visible in the application.')),
+
                     ]),
             ]);
     }
