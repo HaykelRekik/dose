@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\ProductController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/test', fn () => response()->json(
     [
