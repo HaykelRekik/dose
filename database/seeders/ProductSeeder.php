@@ -17,7 +17,6 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
-        // For idempotency, we clear the tables in the correct order to avoid foreign key constraint issues.
         DB::statement('SET FOREIGN_KEY_CHECKS=0');
         Product::truncate();
         DB::table('product_option_groups')->truncate();
@@ -25,13 +24,9 @@ class ProductSeeder extends Seeder
         DB::table('category_product')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
-        // Fetch all categories and map their English names to their IDs for easy lookup.
         $categories = Category::pluck('id', 'name_en')->all();
 
         $productsData = $this->getProductsData();
-
-        // A progress bar is nice for seeding a large amount of data.
-        $this->command->getOutput()->progressStart(count($productsData));
 
         foreach ($productsData as $productData) {
             /** @var Product $product */
@@ -42,17 +37,15 @@ class ProductSeeder extends Seeder
                 'description_ar' => $productData['description_ar'],
                 'price' => $productData['price'],
                 'estimated_preparation_time' => $productData['estimated_preparation_time'],
-                'image_url' => $productData['image_url'], // Assumes images are in storage/app/public/products
+                'image_url' => $productData['image_url'],
                 'is_active' => true,
             ]);
 
-            // Attach categories to the product
-            $categoryIds = collect($productData['categories'])->map(fn($catName) => $categories[$catName] ?? null)->filter()->all();
-            if (!empty($categoryIds)) {
+            $categoryIds = collect($productData['categories'])->map(fn ($catName) => $categories[$catName] ?? null)->filter()->all();
+            if ( ! empty($categoryIds)) {
                 $product->categories()->attach($categoryIds);
             }
 
-            // Create option groups and their options
             foreach ($productData['option_groups'] as $groupData) {
                 $group = $product->optionGroups()->create([
                     'name_en' => $groupData['name_en'],
@@ -65,17 +58,11 @@ class ProductSeeder extends Seeder
                     $group->options()->create($optionData);
                 }
             }
-
-            $this->command->getOutput()->progressAdvance();
         }
-
-        $this->command->getOutput()->progressFinish();
     }
 
     /**
      * Provides a structured array of realistic product data.
-     *
-     * @return array
      */
     private function getProductsData(): array
     {
@@ -107,7 +94,7 @@ class ProductSeeder extends Seeder
                             ['name_en' => 'Whole Milk', 'name_ar' => 'حليب كامل الدسم', 'extra_price' => 0.00],
                             ['name_en' => 'Skim Milk', 'name_ar' => 'حليب خالي الدسم', 'extra_price' => 0.00],
                             ['name_en' => 'Oat Milk', 'name_ar' => 'حليب الشوفان', 'extra_price' => 3.00, 'is_active' => true],
-                            ['name_en' => 'Almond Milk', 'name_ar' => 'حليب اللوز', 'extra_price' => 3.00, 'is_active' => false], // Example of an inactive option
+                            ['name_en' => 'Almond Milk', 'name_ar' => 'حليب اللوز', 'extra_price' => 3.00, 'is_active' => false],
                         ],
                     ],
                     [
@@ -181,6 +168,7 @@ class ProductSeeder extends Seeder
                     ],
                 ],
             ],
+            // Product 4: Cake
             [
                 'name_en' => 'Chocolate Fudge Cake',
                 'name_ar' => 'كيكة الشوكولاتة فدج',
@@ -197,6 +185,142 @@ class ProductSeeder extends Seeder
                         'options' => [
                             ['name_en' => 'Scoop of Ice Cream', 'name_ar' => 'كرة آيس كريم', 'extra_price' => 7.00],
                             ['name_en' => 'Extra Chocolate Sauce', 'name_ar' => 'صلصة شوكولاتة إضافية', 'extra_price' => 3.00],
+                        ],
+                    ],
+                ],
+            ],
+            // Product 5: Juice
+            [
+                'name_en' => 'Fresh Orange Juice',
+                'name_ar' => 'عصير برتقال طازج',
+                'description_en' => 'Squeezed daily from fresh, ripe oranges. A pure taste of sunshine.',
+                'description_ar' => 'معصور يوميًا من برتقال طازج وناضج. طعم نقي من أشعة الشمس.',
+                'price' => 18.00,
+                'estimated_preparation_time' => 3,
+                'image_url' => 'products/orange-juice.jpg',
+                'categories' => ['Fresh Juices'],
+                'option_groups' => [
+                    [
+                        'name_en' => 'Size', 'name_ar' => 'الحجم',
+                        'type' => ProductOptionGroupType::SINGLE_SELECT, 'is_required' => true,
+                        'options' => [
+                            ['name_en' => 'Regular', 'name_ar' => 'عادي', 'extra_price' => 0],
+                            ['name_en' => 'Large', 'name_ar' => 'كبير', 'extra_price' => 4.00],
+                        ],
+                    ],
+                ],
+            ],
+            // Product 6: Salad
+            [
+                'name_en' => 'Classic Caesar Salad',
+                'name_ar' => 'سلطة سيزر كلاسيك',
+                'description_en' => 'Crisp romaine lettuce, parmesan cheese, crunchy croutons, and our signature Caesar dressing.',
+                'description_ar' => 'خس روماني مقرمش، جبنة بارميزان، خبز محمص، وصلصة السيزر الخاصة بنا.',
+                'price' => 32.00,
+                'estimated_preparation_time' => 8,
+                'image_url' => 'products/caesar-salad.jpg',
+                'categories' => ['Salads'],
+                'option_groups' => [
+                    [
+                        'name_en' => 'Add Protein', 'name_ar' => 'إضافة بروتين',
+                        'type' => ProductOptionGroupType::MULTI_SELECT, 'is_required' => false,
+                        'options' => [
+                            ['name_en' => 'Grilled Chicken', 'name_ar' => 'دجاج مشوي', 'extra_price' => 10.00],
+                            ['name_en' => 'Grilled Shrimp', 'name_ar' => 'روبيان مشوي', 'extra_price' => 15.00],
+                        ],
+                    ],
+                ],
+            ],
+            // Product 7: Breakfast
+            [
+                'name_en' => 'Scrambled Eggs on Toast',
+                'name_ar' => 'بيض مخفوق على التوست',
+                'description_en' => 'Creamy scrambled eggs served on a slice of your favorite toasted bread.',
+                'description_ar' => 'بيض مخفوق كريمي يقدم على شريحة من خبز التوست المفضل لديك.',
+                'price' => 25.00,
+                'estimated_preparation_time' => 12,
+                'image_url' => 'products/scrambled-eggs.jpg',
+                'categories' => ['Breakfast'],
+                'option_groups' => [
+                    [
+                        'name_en' => 'Bread Choice', 'name_ar' => 'اختر الخبز',
+                        'type' => ProductOptionGroupType::SINGLE_SELECT, 'is_required' => true,
+                        'options' => [
+                            ['name_en' => 'Sourdough', 'name_ar' => 'ساوردو', 'extra_price' => 0],
+                            ['name_en' => 'Multigrain', 'name_ar' => 'حبوب متعددة', 'extra_price' => 2.00],
+                            ['name_en' => 'Brioche', 'name_ar' => 'بريوش', 'extra_price' => 3.00],
+                        ],
+                    ],
+                    [
+                        'name_en' => 'Add-ons', 'name_ar' => 'إضافات',
+                        'type' => ProductOptionGroupType::MULTI_SELECT, 'is_required' => false,
+                        'options' => [
+                            ['name_en' => 'Avocado Slices', 'name_ar' => 'شرائح أفوكادو', 'extra_price' => 8.00],
+                            ['name_en' => 'Sautéed Mushrooms', 'name_ar' => 'فطر سوتيه', 'extra_price' => 5.00],
+                        ],
+                    ],
+                ],
+            ],
+            // Product 8: Croissant
+            [
+                'name_en' => 'Almond Croissant',
+                'name_ar' => 'كرواسان باللوز',
+                'description_en' => 'A flaky butter croissant with a sweet almond paste filling, topped with toasted almonds.',
+                'description_ar' => 'كرواسان زبدة هش بحشوة عجينة اللوز الحلوة، مغطى باللوز المحمص.',
+                'price' => 14.00,
+                'estimated_preparation_time' => 2,
+                'image_url' => 'products/almond-croissant.jpg',
+                'categories' => ['Croissants'],
+                'option_groups' => [
+                    [
+                        'name_en' => 'Preparation', 'name_ar' => 'التحضير',
+                        'type' => ProductOptionGroupType::SINGLE_SELECT, 'is_required' => false,
+                        'options' => [
+                            ['name_en' => 'Served as is', 'name_ar' => 'كما هو', 'extra_price' => 0],
+                            ['name_en' => 'Warmed up', 'name_ar' => 'تسخين', 'extra_price' => 0],
+                        ],
+                    ],
+                ],
+            ],
+            // Product 9: Iced Coffee
+            [
+                'name_en' => 'Iced Americano',
+                'name_ar' => 'أمريكانو مثلج',
+                'description_en' => 'Rich, full-bodied espresso shots combined with water and served over ice.',
+                'description_ar' => 'جرعات إسبريسو غنية وكاملة القوام ممزوجة بالماء وتقدم فوق الثلج.',
+                'price' => 12.00,
+                'estimated_preparation_time' => 3,
+                'image_url' => 'products/iced-americano.jpg',
+                'categories' => ['Iced Drinks', 'Espresso Based'],
+                'option_groups' => [
+                    [
+                        'name_en' => 'Size', 'name_ar' => 'الحجم',
+                        'type' => ProductOptionGroupType::SINGLE_SELECT, 'is_required' => true,
+                        'options' => [
+                            ['name_en' => 'Medium', 'name_ar' => 'وسط', 'extra_price' => 0],
+                            ['name_en' => 'Large', 'name_ar' => 'كبير', 'extra_price' => 3.00],
+                        ],
+                    ],
+                ],
+            ],
+            // Product 10: Brewed Coffee
+            [
+                'name_en' => 'V60 Pour-Over',
+                'name_ar' => 'قهوة مقطرة V60',
+                'description_en' => 'A clean, crisp, and flavorful cup of coffee, hand-brewed to order. Choose your favorite SINGLE_SELECT-origin bean.',
+                'description_ar' => 'فنجان قهوة نظيف ونقي ومليء بالنكهة، يتم تحضيره يدويًا حسب الطلب. اختر حبوب القهوة ذات المنشأ الواحد المفضلة لديك.',
+                'price' => 25.00,
+                'estimated_preparation_time' => 7,
+                'image_url' => 'products/v60-coffee.jpg',
+                'categories' => ['Brewed Coffee', 'Coffee Beans'],
+                'option_groups' => [
+                    [
+                        'name_en' => 'Coffee Bean Selection', 'name_ar' => 'اختر نوع حبوب القهوة',
+                        'type' => ProductOptionGroupType::SINGLE_SELECT, 'is_required' => true,
+                        'options' => [
+                            ['name_en' => 'Ethiopian Yirgacheffe', 'name_ar' => 'إثيوبي يرقاشيف', 'extra_price' => 0],
+                            ['name_en' => 'Colombian Supremo', 'name_ar' => 'كولومبي سوبريمو', 'extra_price' => 2.00],
+                            ['name_en' => 'Kenyan AA', 'name_ar' => 'كيني AA', 'extra_price' => 4.00],
                         ],
                     ],
                 ],

@@ -79,7 +79,7 @@ class ProductResource extends Resource
                             ->required()
                             ->boolean(
                                 trueLabel: __('Available'),
-                                falseLabel: __('Not Available'),
+                                falseLabel: __('Unavailable'),
                             )
                             ->grouped()
                             ->default(true),
@@ -91,7 +91,7 @@ class ProductResource extends Resource
                     ->schema([
                         Repeater::make('optionGroups')
                             ->relationship()
-                            ->itemLabel(fn(array $state): ?string => $state['name_en'] ?? null)
+                            ->itemLabel(fn(array $state): ?string => $state['name_' . app()->getLocale()] ?? null)
                             ->reorderable()
                             ->schema([
                                 Forms\Components\Grid::make(4)
@@ -119,9 +119,11 @@ class ProductResource extends Resource
                                 Repeater::make('options')
                                     ->relationship()
                                     ->reorderable()
+                                    ->itemLabel(fn(array $state): ?string => $state['name_' . app()->getLocale()] ?? null)
                                     ->schema([
                                         Forms\Components\TextInput::make('name_en')
                                             ->label(__('Option Name (EN)'))
+                                            ->live(onBlur: true)
                                             ->required(),
                                         Forms\Components\TextInput::make('name_ar')
                                             ->label(__('Option Name (AR)'))
@@ -132,16 +134,24 @@ class ProductResource extends Resource
                                             ->prefix('SAR')
                                             ->maxLength(null)
                                             ->default(0.00),
-                                        Forms\Components\Toggle::make('is_active')
-                                            ->label(__('Available'))
+                                        Forms\Components\ToggleButtons::make('is_active')
+                                            ->label(__('Available Options?'))
+                                            ->required()
+                                            ->boolean(
+                                                trueLabel: __('Available'),
+                                                falseLabel: __('Unavailable'),
+                                            )
+                                            ->grouped()
                                             ->default(true),
                                     ])
-                                    ->columns(2)
+                                    ->columns(4)
                                     ->collapsible()
+                                    ->collapsed()
                                     ->label(__('Options / Choices'))
                                     ->defaultItems(1),
                             ])
                             ->collapsible()
+                            ->collapsed()
                             ->cloneable()
                             ->label(__('Option Groups')),
                     ]),
