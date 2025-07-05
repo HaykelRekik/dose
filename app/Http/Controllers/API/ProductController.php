@@ -20,7 +20,7 @@ class ProductController extends Controller
             ->active()
             ->when(
                 request()->filled('category'),
-                fn (Builder $query) => $query->withWhereHas('categories', fn ($query) => $query->where('slug', request('category'))),
+                fn (Builder $query) => $query->whereRelation('categories', 'slug', request('category')),
             )
             ->get();
 

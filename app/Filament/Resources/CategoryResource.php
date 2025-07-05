@@ -17,8 +17,6 @@ class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
 
-    protected static ?string $navigationIcon = 'phosphor-bookmarks-duotone';
-
     public static function form(Form $form): Form
     {
         return $form
@@ -115,8 +113,8 @@ class CategoryResource extends Resource
         return __('Categories');
     }
 
-    public static function getNavigationLabel(): string
+    public static function getNavigationGroup(): ?string
     {
-        return __('Product Categories');
+        return __('Products Management');
     }
 }

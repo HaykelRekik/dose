@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserRole;
 use App\Traits\HasRole;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
@@ -31,7 +33,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'email',
         'password',
         'phone',
+        'role',
         'avatar_url',
+        'branch_id',
+        'last_login_at',
+        'last_login_ip',
     ];
 
     /**
@@ -54,6 +60,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->avatar_url ? Storage::url($this->avatar_url) : null;
     }
 
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
+    }
+
     /**
      * Get the attributes that should be cast.
      *
@@ -63,7 +74,9 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_login_at' => 'datetime',
             'password' => 'hashed',
+            'role' => UserRole::class,
         ];
     }
 }

@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Providers\Filament;
 
+use App\Filament\Resources\UserResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationItem;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -56,6 +59,36 @@ class HubPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
+            ])
+            ->navigationGroups([
+                NavigationGroup::make()
+                    ->label(__('Products Management'))
+                    ->icon('phosphor-bookmarks-duotone')
+                    ->collapsible(false),
+
+                NavigationGroup::make()
+                    ->label(__('Users Management'))
+                    ->icon('phosphor-users-duotone')
+                    ->collapsible(true),
+            ])
+            ->navigationItems([
+                NavigationItem::make('admins')
+                    ->label(__('Admins'))
+                    ->isActiveWhen(fn (): bool => 'admins' === request()->get('activeTab'))
+                    ->url(fn (): string => UserResource::getUrl('index') . '?activeTab=admins')
+                    ->group(fn (): string => __('Users Management')),
+
+                NavigationItem::make('employees')
+                    ->label(__('Employees'))
+                    ->isActiveWhen(fn (): bool => 'employees' === request()->get('activeTab'))
+                    ->url(fn (): string => UserResource::getUrl('index') . '?activeTab=employees')
+                    ->group(fn (): string => __('Users Management')),
+
+                NavigationItem::make('customers')
+                    ->label(__('Customers'))
+                    ->isActiveWhen(fn (): bool => 'customers' === request()->get('activeTab'))
+                    ->url(fn (): string => UserResource::getUrl('index') . '?activeTab=customers')
+                    ->group(fn (): string => __('Users Management')),
             ])
             ->middleware([
                 EncryptCookies::class,
