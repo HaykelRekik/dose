@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Auth;
 
 use App\Models\User;
+use App\Notifications\SendOTPNotification;
 
 class OTPService
 {
@@ -66,6 +67,7 @@ class OTPService
         $this->generateTokenFor(user : $user);
 
         $message = __('Your verification code is :otp. This code will expire in :minutes minutes.', ['otp' => $user->otp_secret, 'minutes' => config('auth.otp_expires_in_minutes')]);
+        $user->notify(new SendOTPNotification($message));
 
         //        Mail::to($user->email)->send(
         //            mailable: new OTPCodeEmail(
