@@ -12,6 +12,16 @@ class EditBranch extends EditRecord
 {
     protected static string $resource = BranchResource::class;
 
+    public function hasCombinedRelationManagerTabsWithContent(): bool
+    {
+        return true;
+    }
+
+    public function getContentTabLabel(): ?string
+    {
+        return __('Branch details');
+    }
+
     protected function getHeaderActions(): array
     {
         return [

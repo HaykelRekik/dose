@@ -303,5 +303,8 @@
     "Admins": "المشرفين",
     "Employees": "الموظفين",
     "Customers": "العملاء",
-    "Not specified" : "غير مُحدَّد"
+    "Not specified" : "غير مُحدَّد",
+    "Branch details": "تفاصيل الفرع",
+    "Employees management": "إدارة الموظفين",
+    "Branch employees management": "إدارة موظفي الفرع"
 }
