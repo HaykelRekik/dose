@@ -66,6 +66,12 @@ class UtilityServiceProvider extends ServiceProvider
          * Customize default table pagination options
          */
         Table::configureUsing(modifyUsing: fn (Table $table): Table => $table->paginated([5, 10])->defaultPaginationPageOption(10));
+
+        /**
+         * Deferred table filters
+         */
+        Table::configureUsing(modifyUsing: fn (Table $table): Table => $table->deferFilters(true));
+
         /**
          * Get the latest records by default
          */

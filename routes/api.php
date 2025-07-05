@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\API\Auth\OTPController;
+use App\Http\Controllers\API\BranchController;
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\ProductController;
 use Illuminate\Support\Facades\Route;
@@ -31,4 +32,7 @@ Route::prefix('auth')->group(function (): void {
         Route::post('request', [OTPController::class, 'requestOtp']);
         Route::post('verify', [OTPController::class, 'verifyOtp']);
     });
+Route::prefix('branches')->group(function (): void {
+    Route::get('/', [BranchController::class, 'index']);
+    Route::get('/{branch}', [BranchController::class, 'show']);
 });

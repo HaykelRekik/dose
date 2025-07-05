@@ -12,8 +12,8 @@ use Filament\Support\Contracts\HasLabel;
 enum UserRole: string implements HasColor, HasIcon, HasLabel
 {
     case ADMIN = 'admin';
-    case STORE = 'store';
-    case USER = 'user';
+    case EMPLOYEE = 'employee';
+    case CUSTOMER = 'customer';
 
     public function getLabel(): ?string
     {
@@ -24,8 +24,8 @@ enum UserRole: string implements HasColor, HasIcon, HasLabel
     {
         return match ($this) {
             self::ADMIN => Color::Rose,
-            self::STORE => Color::Blue,
-            self::USER => Color::Purple,
+            self::EMPLOYEE => Color::Blue,
+            self::CUSTOMER => Color::Slate,
         };
     }
 
@@ -33,8 +33,8 @@ enum UserRole: string implements HasColor, HasIcon, HasLabel
     {
         return match ($this) {
             self::ADMIN => 'phosphor-shield-star-duotone',
-            self::STORE => 'phosphor-storefront-duotone',
-            self::USER => 'phosphor-user-duotone',
+            self::EMPLOYEE => 'phosphor-storefront-duotone',
+            self::CUSTOMER => 'phosphor-user-duotone',
         };
     }
 }
