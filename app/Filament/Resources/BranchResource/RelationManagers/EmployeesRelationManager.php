@@ -42,6 +42,7 @@ class EmployeesRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->heading(__('Employees'))
             ->recordTitleAttribute('name')
             ->columns([
                 Tables\Columns\TextColumn::make('name'),
@@ -62,4 +63,14 @@ class EmployeesRelationManager extends RelationManager
                 ]),
             ]);
     }
+
+    /**
+     * @return string|null
+     */
+    public static function getModelLabel(): ?string
+    {
+        return __('employee');
+    }
+
+
 }

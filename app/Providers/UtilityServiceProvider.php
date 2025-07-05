@@ -46,6 +46,7 @@ class UtilityServiceProvider extends ServiceProvider
          */
         CreateRecord::disableCreateAnother();
 
+
         /**
          * Add icon to create new record
          */
