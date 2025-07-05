@@ -24,6 +24,8 @@ class Branch extends Model
         'is_active',
     ];
 
+    protected array $translatable = ['name', 'address'];
+
     public function employees(): HasMany
     {
         return $this->hasMany(User::class, 'branch_id');

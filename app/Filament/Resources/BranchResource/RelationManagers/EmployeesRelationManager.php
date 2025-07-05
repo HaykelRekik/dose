@@ -6,7 +6,6 @@ namespace App\Filament\Resources\BranchResource\RelationManagers;
 
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Pages\Page;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
@@ -27,11 +26,6 @@ class EmployeesRelationManager extends RelationManager
     public static function getTitle(Model $ownerRecord, string $pageClass): string
     {
         return __('Branch employees management');
-    }
-
-    protected static function getPluralModelLabel(): ?string
-    {
-        return __('Employees');
     }
 
     public function form(Form $form): Form
@@ -103,5 +97,10 @@ class EmployeesRelationManager extends RelationManager
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    protected static function getPluralModelLabel(): ?string
+    {
+        return __('Employees');
     }
 }
