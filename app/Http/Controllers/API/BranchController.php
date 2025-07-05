@@ -21,7 +21,7 @@ class BranchController extends Controller
                 5,
                 60,
             ],
-            callback: fn() => Branch::active()->get(),
+            callback: fn () => Branch::active()->get(),
         );
 
         return response()->success(
@@ -32,7 +32,7 @@ class BranchController extends Controller
 
     public function show(Branch $branch)
     {
-        if (!$branch->is_active) {
+        if ( ! $branch->is_active) {
             return response()->error(
                 message: 'Branch not found.',
                 status: HttpResponse::HTTP_NOT_FOUND,
@@ -45,7 +45,7 @@ class BranchController extends Controller
                 5,
                 30,
             ],
-            callback: fn() => $branch,
+            callback: fn () => $branch,
         );
 
         return response()->success(

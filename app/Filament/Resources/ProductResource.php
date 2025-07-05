@@ -51,7 +51,8 @@ class ProductResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('price')
                     ->label(__('Price'))
-                    ->numeric(locale: 'en'),
+                    ->numeric(locale: 'en')
+                    ->saudiRiyal(),
 
                 Tables\Columns\IconColumn::make('is_active')
                     ->label(__('Availability'))
@@ -138,7 +139,7 @@ class ProductResource extends Resource
                     ->numeric()
                     ->maxLength(null)
                     ->minValue(0)
-                    ->suffix('SAR'),
+                    ->saudiRiyal(),
                 Forms\Components\TextInput::make('estimated_preparation_time')
                     ->label(__('Estimated preparation time'))
                     ->required()
@@ -149,7 +150,7 @@ class ProductResource extends Resource
                     ->relationship(
                         name: 'categories',
                         titleAttribute: 'name_' . app()->getLocale(),
-                        modifyQueryUsing: fn ($query) => $query->where('is_active', true)->orderBy('position', 'asc')
+                        modifyQueryUsing: fn($query) => $query->where('is_active', true)->orderBy('position', 'asc')
                     )
                     ->multiple()
                     ->preload()
@@ -188,7 +189,7 @@ class ProductResource extends Resource
     {
         return Repeater::make('optionGroups')
             ->relationship()
-            ->itemLabel(fn (array $state): ?string => $state['name_' . app()->getLocale()] ?? null)
+            ->itemLabel(fn(array $state): ?string => $state['name_' . app()->getLocale()] ?? null)
             ->reorderable()
             ->schema([
                 Forms\Components\Grid::make(4)
@@ -227,7 +228,7 @@ class ProductResource extends Resource
         return Repeater::make('options')
             ->relationship()
             ->reorderable()
-            ->itemLabel(fn (array $state): ?string => $state['name_' . app()->getLocale()] ?? null)
+            ->itemLabel(fn(array $state): ?string => $state['name_' . app()->getLocale()] ?? null)
             ->schema([
                 Forms\Components\TextInput::make('name_en')
                     ->label(__('Option Name (EN)'))
@@ -239,7 +240,7 @@ class ProductResource extends Resource
                 Forms\Components\TextInput::make('extra_price')
                     ->label(__('Extra Price'))
                     ->numeric()
-                    ->prefix('SAR')
+                    ->saudiRiyal()
                     ->maxLength(null)
                     ->default(0.00),
                 Forms\Components\ToggleButtons::make('is_active')

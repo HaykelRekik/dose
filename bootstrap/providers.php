@@ -7,4 +7,5 @@ return [
     App\Providers\Filament\HubPanelProvider::class,
     App\Providers\UtilityServiceProvider::class,
     App\Providers\ResponseMacroServiceProvider::class,
+    App\Providers\MacrosServiceProvider::class,
 ];
