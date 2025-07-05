@@ -10,9 +10,10 @@ use App\Http\Requests\API\Auth\OTP\VerifytOTPRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\Auth\OTPService;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Http\JsonResponse;
 
-class OTPController extends Controller
+class LoginController extends Controller
 {
     public function __construct(protected OTPService $otpService) {}
 
@@ -24,12 +25,12 @@ class OTPController extends Controller
 
         if ( ! $this->otpService->sendOtpFor(user: $user)) {
             return response()->error(
-                message : __('Failed to send OTP. Please try again later.')
+                message: __('Failed to send OTP. Please try again later.')
             );
         }
 
         return response()->success(
-            message : __('OTP has been sent. This code is valid for :minutes minutes.', ['minutes' => config('auth.otp_expires_in_minutes')]),
+            message: __('OTP has been sent. This code is valid for :minutes minutes.', ['minutes' => config('auth.otp_expires_in_minutes')]),
             data: app()->isLocal() ?
                 [
                     'phone_number' => $user->phone,
@@ -50,7 +51,7 @@ class OTPController extends Controller
             return $this->invalidOtpResponse();
         }
 
-        return $this->loggedInResponse($user);
+        return $this->loginUser($user);
     }
 
     private function invalidOtpResponse(): JsonResponse
@@ -60,12 +61,15 @@ class OTPController extends Controller
         );
     }
 
-    private function loggedInResponse(User $user): JsonResponse
+    private function loginUser(User $user): JsonResponse
     {
         $this->otpService->deleteOTPFor(user: $user);
 
         $user->token_type = 'Bearer';
         $user->token = $user->createToken('authToken')->plainTextToken;
+
+        //        Trigger Login event
+        event(new Login('web', $user, false));
 
         return response()->success(
             message: __('Logged in successfully'),

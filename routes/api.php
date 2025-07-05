@@ -2,7 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\API\Auth\OTPController;
+use App\Http\Controllers\API\Auth\LoginController;
+use App\Http\Controllers\API\Auth\RegisterController;
 use App\Http\Controllers\API\BranchController;
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\ProductController;
@@ -27,11 +28,19 @@ Route::prefix('products')->group(function (): void {
 });
 
 Route::prefix('auth')->group(function (): void {
-    // OTP - Login //
-    Route::prefix('otp')->middleware('throttle:5,1')->group(function (): void {
-        Route::post('request', [OTPController::class, 'requestOtp']);
-        Route::post('verify', [OTPController::class, 'verifyOtp']);
+    Route::middleware('throttle:5,1')->group(function (): void {
+        // OTP - Login //
+        Route::prefix('otp')->group(function (): void {
+            Route::post('request', [LoginController::class, 'requestOtp']);
+            Route::post('verify', [LoginController::class, 'verifyOtp']);
+        });
+
+        // Registration //
+        Route::post('register', [RegisterController::class, 'register']);
     });
+
+});
+
 Route::prefix('branches')->group(function (): void {
     Route::get('/', [BranchController::class, 'index']);
     Route::get('/{branch}', [BranchController::class, 'show']);
