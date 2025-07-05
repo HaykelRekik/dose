@@ -14,6 +14,7 @@ use App\Services\Auth\OTPService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class AuthController extends Controller
 {
@@ -31,7 +32,7 @@ class AuthController extends Controller
             return response()->success(
                 message: __('Account created successfully. Please login using the otp sent to you.'),
                 data: new UserResource($user),
-                code: 201
+                status: HttpResponse::HTTP_CREATED
             );
 
         } catch (Exception $e) {

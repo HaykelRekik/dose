@@ -7,6 +7,7 @@ namespace App\Http\Requests\API\Auth\Register;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class RegisterRequest extends FormRequest
 {
@@ -50,7 +51,7 @@ class RegisterRequest extends FormRequest
             response()->error(
                 message: __('The given data is invalid.'),
                 data: $validator->errors()->toArray(),
-                code: 422
+                status: HttpResponse::HTTP_UNPROCESSABLE_ENTITY
             )
         );
     }
