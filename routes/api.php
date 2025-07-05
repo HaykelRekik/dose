@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Auth\LoginController;
-use App\Http\Controllers\API\Auth\RegisterController;
 use App\Http\Controllers\API\BranchController;
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\ProductController;
@@ -36,7 +36,12 @@ Route::prefix('auth')->group(function (): void {
         });
 
         // Registration //
-        Route::post('register', [RegisterController::class, 'register']);
+        Route::post('register', [AuthController::class, 'register']);
+    });
+
+    Route::middleware('auth:sanctum')->group(function (): void {
+        Route::get('me', [AuthController::class, 'me']);
+        Route::post('profile', [AuthController::class, 'updateProfile']);
     });
 
 });

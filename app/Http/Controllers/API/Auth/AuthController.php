@@ -6,6 +6,7 @@ namespace App\Http\Controllers\API\Auth;
 
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\API\Auth\Profile\UpdateProfileRequest;
 use App\Http\Requests\API\Auth\Register\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
@@ -14,7 +15,7 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
-class RegisterController extends Controller
+class AuthController extends Controller
 {
     public function __construct(protected OTPService $otpService) {}
 
@@ -43,5 +44,23 @@ class RegisterController extends Controller
             );
         }
 
+    }
+
+    public function me(): JsonResponse
+    {
+        return response()->success(
+            message: __('Authenticated User Information'),
+            data: new UserResource(request()->user())
+        );
+    }
+
+    public function updateProfile(UpdateProfileRequest $request): JsonResponse
+    {
+        $request->user()->update($request->validated());
+
+        return response()->success(
+            message: __('User profile updated successfully'),
+            data: new UserResource(request()->user())
+        );
     }
 }
