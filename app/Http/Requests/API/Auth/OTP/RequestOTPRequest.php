@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\API\Auth\OTP;
 
-use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
-use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class RequestOTPRequest extends FormRequest
 {
@@ -33,22 +30,6 @@ class RequestOTPRequest extends FormRequest
                 'exists:users,phone',
             ],
         ];
-    }
-
-    /**
-     * Format the errors from the given Validator instance to keep the response consistent.
-     *
-     * @throws HttpResponseException
-     */
-    public function failedValidation(Validator $validator): void
-    {
-        throw new HttpResponseException(
-            response()->error(
-                message: __('The given data is invalid.'),
-                data: $validator->errors()->toArray(),
-                status: HttpResponse::HTTP_UNPROCESSABLE_ENTITY
-            )
-        );
     }
 
     public function messages(): array

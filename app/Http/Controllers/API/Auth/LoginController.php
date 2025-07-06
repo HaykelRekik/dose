@@ -68,7 +68,6 @@ class LoginController extends Controller
         $user->token_type = 'Bearer';
         $user->token = $user->createToken('authToken')->plainTextToken;
 
-        //        Trigger Login event
         event(new Login('web', $user, false));
 
         return response()->success(
