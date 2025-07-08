@@ -7,4 +7,13 @@ export default {
         './resources/views/filament/**/*.blade.php',
         './vendor/filament/**/*.blade.php',
     ],
+
+    theme: {
+        extend: {
+            borderRadius: {
+                'lg': '0.3rem',
+                'xl': '0.4rem',
+            }
+        },
+    },
 }

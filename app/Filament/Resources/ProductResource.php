@@ -150,7 +150,7 @@ class ProductResource extends Resource
                     ->relationship(
                         name: 'categories',
                         titleAttribute: 'name_' . app()->getLocale(),
-                        modifyQueryUsing: fn($query) => $query->where('is_active', true)->orderBy('position', 'asc')
+                        modifyQueryUsing: fn($query) => $query->active()->orderBy('position', 'asc')
                     )
                     ->multiple()
                     ->preload()
