@@ -7,6 +7,7 @@ namespace App\Filament\Resources;
 use App\Enums\UserRole;
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
@@ -51,14 +52,14 @@ class UserResource extends Resource
                             ->schema([
                                 Forms\Components\TextInput::make('email')
                                     ->label(__('Email'))
-                                    ->required(fn (Forms\Get $get) => $get('role') !== UserRole::CUSTOMER->value)
-                                    ->hidden(fn (Forms\Get $get) => $get('role') === UserRole::CUSTOMER->value)
+                                    ->required(fn(Forms\Get $get) => $get('role') !== UserRole::CUSTOMER->value)
+                                    ->hidden(fn(Forms\Get $get) => $get('role') === UserRole::CUSTOMER->value)
                                     ->email()
                                     ->unique(ignoreRecord: true),
                                 Forms\Components\TextInput::make('password')
                                     ->label(__('Password'))
-                                    ->required(fn (Forms\Get $get) => $get('role') !== UserRole::CUSTOMER->value)
-                                    ->hidden(fn (Forms\Get $get) => $get('role') === UserRole::CUSTOMER->value)
+                                    ->required(fn(Forms\Get $get) => $get('role') !== UserRole::CUSTOMER->value)
+                                    ->hidden(fn(Forms\Get $get) => $get('role') === UserRole::CUSTOMER->value)
                                     ->password()
                                     ->visibleOn('create')
                                     ->revealable(),
@@ -70,8 +71,8 @@ class UserResource extends Resource
                                     )
                                     ->searchable()
                                     ->preload()
-                                    ->required(fn (Forms\Get $get) => $get('role') === UserRole::EMPLOYEE->value)
-                                    ->visible(fn (Forms\Get $get) => $get('role') === UserRole::EMPLOYEE->value),
+                                    ->required(fn(Forms\Get $get) => $get('role') === UserRole::EMPLOYEE->value)
+                                    ->visible(fn(Forms\Get $get) => $get('role') === UserRole::EMPLOYEE->value),
                             ]),
                     ]),
             ]);
@@ -90,7 +91,7 @@ class UserResource extends Resource
                     ->icon('phosphor-envelope-open-duotone')
                     ->placeholder(__('Not specified'))
                     ->searchable()
-                    ->visible(fn (Page $livewire): bool => 'customers' !== $livewire->activeTab),
+                    ->visible(fn(Page $livewire): bool => 'customers' !== $livewire->activeTab),
                 PhoneColumn::make('phone')
                     ->label(__('Phone'))
                     ->icon('phosphor-phone-call-duotone')
@@ -99,11 +100,11 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('role')
                     ->label(__('Account Type'))
                     ->badge()
-                    ->hidden(fn (Page $livewire): bool => 'all' !== $livewire->activeTab),
+                    ->hidden(fn(Page $livewire): bool => 'all' !== $livewire->activeTab),
                 Tables\Columns\TextColumn::make('branch.name_' . app()->getLocale())
                     ->label(__('Branch'))
                     ->weight(FontWeight::Medium)
-                    ->hidden(fn (Page $livewire): bool => 'employees' !== $livewire->activeTab),
+                    ->hidden(fn(Page $livewire): bool => 'employees' !== $livewire->activeTab),
                 Tables\Columns\TextColumn::make('last_login_at')
                     ->label(__('Last login at'))
                     ->dateTime()
@@ -157,4 +158,6 @@ class UserResource extends Resource
     {
         return __('Users Management');
     }
+
+
 }

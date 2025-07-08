@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Providers\Filament;
 
+use App\Enums\UserRole;
+use App\Filament\Pages\Auth\Login;
 use App\Filament\Resources\UserResource;
+use App\Models\User;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -74,21 +77,24 @@ class HubPanelProvider extends PanelProvider
             ->navigationItems([
                 NavigationItem::make('admins')
                     ->label(__('Admins'))
-                    ->isActiveWhen(fn (): bool => 'admins' === request()->get('activeTab'))
-                    ->url(fn (): string => UserResource::getUrl('index') . '?activeTab=admins')
-                    ->group(fn (): string => __('Users Management')),
+                    ->isActiveWhen(fn(): bool => 'admins' === request()->get('activeTab'))
+                    ->url(fn(): string => UserResource::getUrl('index') . '?activeTab=admins')
+                    ->group(fn(): string => __('Users Management'))
+                    ->visible(fn(): bool => auth()->user()->can('view-any', User::class)),
 
                 NavigationItem::make('employees')
                     ->label(__('Employees'))
-                    ->isActiveWhen(fn (): bool => 'employees' === request()->get('activeTab'))
-                    ->url(fn (): string => UserResource::getUrl('index') . '?activeTab=employees')
-                    ->group(fn (): string => __('Users Management')),
+                    ->isActiveWhen(fn(): bool => 'employees' === request()->get('activeTab'))
+                    ->url(fn(): string => UserResource::getUrl('index') . '?activeTab=employees')
+                    ->group(fn(): string => __('Users Management'))
+                    ->visible(fn(): bool => auth()->user()->can('view-any', User::class)),
 
                 NavigationItem::make('customers')
                     ->label(__('Customers'))
-                    ->isActiveWhen(fn (): bool => 'customers' === request()->get('activeTab'))
-                    ->url(fn (): string => UserResource::getUrl('index') . '?activeTab=customers')
-                    ->group(fn (): string => __('Users Management')),
+                    ->isActiveWhen(fn(): bool => 'customers' === request()->get('activeTab'))
+                    ->url(fn(): string => UserResource::getUrl('index') . '?activeTab=customers')
+                    ->group(fn(): string => __('Users Management'))
+                    ->visible(fn(): bool => auth()->user()->can('view-any', User::class)),
             ])
             ->middleware([
                 EncryptCookies::class,
