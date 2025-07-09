@@ -7,141 +7,136 @@ namespace App\Http\Requests\API\Orders;
 use App\Enums\PaymentMethod;
 use App\Enums\ProductOptionGroupType;
 use App\Models\Product;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Enum;
+use Illuminate\Validation\Validator;
 
 class StoreOrderRequest extends FormRequest
 {
-    public function rules(): array
-    {
-        return [
-            'branch_id' => ['required', 'integer', 'exists:branches,id'],
-            'products' => ['required', 'array', 'min:1'],
-            'products.*.product_id' => ['required', 'integer', 'exists:products,id'],
-            'products.*.quantity' => ['required', 'integer', 'min:1', 'max:10'],
-            'products.*.options' => ['required', 'array'],
-            'products.*.options.*' => ['required', 'array'],
-            'products.*.options.*.*' => ['required', 'integer', 'exists:product_options,id'],
-            'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
-            'payment_reference' => ['nullable', 'string', 'max:255'],
-            'payment_provider' => ['nullable', 'string', 'max:100'],
-            'customer_note' => ['nullable', 'string', 'max:1000'],
-        ];
-    }
-
-    public function withValidator($validator): void
-    {
-        $validator->after(function ($validator): void {
-            if ($this->filled('products')) {
-                foreach ($this->input('products') as $index => $productData) {
-                    $this->validateProductOptions($validator, $productData, $index);
-                }
-            }
-        });
-    }
-
-    public function messages(): array
-    {
-        return [
-            'branch_id.required' => 'Please select a branch.',
-            'branch_id.exists' => 'The selected branch does not exist.',
-            'products.required' => 'Please add at least one product to your order.',
-            'products.array' => 'The products must be an array.',
-            'products.min' => 'Please add at least one product to your order.',
-            'products.*.product_id.required' => 'Please select a product.',
-            'products.*.product_id.exists' => 'The selected product does not exist.',
-            'products.*.quantity.required' => 'Please specify the quantity for each product.',
-            'products.*.quantity.integer' => 'The quantity must be an integer.',
-            'products.*.quantity.min' => 'The quantity for each product must be at least 1.',
-            'products.*.quantity.max' => 'The quantity for each product cannot exceed 10.',
-            'products.*.options.required' => 'Please select options for each product.',
-            'products.*.options.array' => 'Options must be provided as an array for each product.',
-            'payment_method.required' => 'Please select a payment method.',
-            'customer_note.max' => 'Customer note cannot exceed 1000 characters.',
-        ];
-    }
+    /**
+     * Pre-fetched and validated product models to avoid re-querying in the service.
+     * @var \Illuminate\Support\Collection|null
+     */
+    public ?Collection $hydratedProducts = null;
 
     public function authorize(): bool
     {
         return true;
     }
 
-    private function validateProductOptions($validator, array $productData, int $index): void
+    /**
+     * Get the initial validation rules that apply to the request.
+     */
+    public function rules(): array
     {
-        $product = Product::with([
-            'optionGroups' => fn ($query) => $query->select('id', 'product_id', 'name', 'type', 'is_required'),
-            'optionGroups.options' => fn ($query) => $query->select('id', 'product_option_group_id', 'name', 'is_active')
-                ->where('is_active', true),
-        ])->find($productData['product_id']);
+        return [
+            'branch_id' => ['required', 'integer', 'exists:branches,id'],
+            'payment_method' => ['required', new Enum(PaymentMethod::class)],
+            'payment_reference' => ['nullable', 'string', 'max:255'],
+            'payment_provider' => ['nullable', 'string', 'max:255'],
+            'customer_note' => ['nullable', 'string', 'max:1000'],
 
-        if ( ! $product?->is_active) {
-            $validator->errors()->add("products.{$index}.product_id", 'The selected product is not available.');
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => [
+                'required',
+                'integer',
+                Rule::exists('products', 'id')->where('is_active', true),
+            ],
+            'items.*.quantity' => ['required', 'integer', 'min:1', 'max:100'],
+            'items.*.selected_options' => ['present', 'array'], // `array` validates a JSON object {}
+            'items.*.selected_options.*' => ['required', 'array'], // Each value must be an array
+            'items.*.selected_options.*.*' => ['required', 'integer'], // Each item in the nested array is an option ID
+        ];
+    }
 
+    /**
+     * Get the custom validation messages for user-friendly errors.
+     */
+    public function messages(): array
+    {
+        return [
+            'items.*.product_id.exists' => 'One of the selected products is not available.',
+            'items.*.selected_options.array' => 'The selected_options must be a valid object.',
+            'items.*.selected_options.*.array' => 'Each option group must contain an array of selections.',
+        ];
+    }
+
+    /**
+     * Configure the validator instance for complex, cross-dependent validation.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        if ($validator->fails()) {
             return;
         }
 
-        $selectedOptions = collect($productData['options'] ?? []);
-        $productGroupIds = $product->optionGroups->pluck('id');
+        $validator->after(function ($validator) {
+            $items = collect($this->input('items', []));
+            $productIds = $items->pluck('product_id')->unique()->all();
 
-        $this->validateGroupsBelongToProduct($validator, $selectedOptions, $productGroupIds, $index);
-        $this->validateGroupRequirements($validator, $product->optionGroups, $selectedOptions, $index);
-    }
+            $products = Product::with('optionGroups.options')
+                ->whereIn('id', $productIds)
+                ->get()
+                ->keyBy('id');
 
-    private function validateGroupsBelongToProduct($validator, Collection $selectedOptions, Collection $productGroupIds, int $index): void
-    {
-        $selectedOptions->keys()
-            ->reject(fn ($groupId) => $productGroupIds->contains($groupId))
-            ->each(fn ($groupId) => $validator->errors()->add(
-                "products.{$index}.options.{$groupId}",
-                'The selected option group does not belong to this product.'
-            ));
-    }
+            $this->hydratedProducts = $products;
 
-    private function validateGroupRequirements($validator, Collection $groups, Collection $selectedOptions, int $index): void
-    {
-        $groups->each(function ($group) use ($validator, $selectedOptions, $index): void {
-            $groupId = $group->id;
-            $selectedOptionIds = collect($selectedOptions[$groupId] ?? []);
 
-            // Check required groups
+            foreach ($items as $index => $item) {
+                $product = $products->get($item['product_id']);
+                if (!$product) continue;
 
-            if ($group->is_required && $selectedOptionIds->isEmpty()) {
-                $validator->errors()->add(
-                    "products.{$index}.options.{$groupId}",
-                    "The {$group->name} option group is required."
-                );
-
-                return;
-            }
-
-            if ($selectedOptionIds->isNotEmpty()) {
-                $this->validateGroupConstraints($validator, $group, $selectedOptionIds, $index);
-                $this->validateOptionsBelongToGroup($validator, $group, $selectedOptionIds, $index);
+                $this->validateProductOptions($validator, $product, $item['selected_options'], $index);
             }
         });
     }
 
-    private function validateGroupConstraints($validator, $group, Collection $selectedOptionIds, int $index): void
+    /**
+     * Perform deep validation on a single cart item's options using the new structure.
+     */
+    private function validateProductOptions(Validator $validator, Product $product, array $selectedOptions, int $itemIndex): void
     {
-        if (ProductOptionGroupType::SINGLE_SELECT === $group->type && $selectedOptionIds->count() > 1) {
-            $validator->errors()->add(
-                "products.{$index}.options.{$group->id}",
-                "The {$group->name} option group allows only one selection."
-            );
+        $productOptionGroups = $product->optionGroups->keyBy('id');
+        foreach ($productOptionGroups as $groupId => $group) {
+
+            if ($group->is_required && empty($selectedOptions[$groupId])) {
+                $validator->errors()->add(
+                    "items.{$itemIndex}.selected_options",
+                    "A selection for the required group '{$group->name}' is missing for product '{$product->name}'."
+                );
+            }
         }
-    }
 
-    private function validateOptionsBelongToGroup($validator, $group, Collection $selectedOptionIds, int $index): void
-    {
-        $validOptionIds = $group->options->pluck('id');
-        $invalidOptions = $selectedOptionIds->diff($validOptionIds);
+        foreach ($selectedOptions as $submittedGroupId => $submittedOptionIds) {
+            if (!$productOptionGroups->has($submittedGroupId)) {
+                $validator->errors()->add(
+                    "items.{$itemIndex}.selected_options",
+                    "Invalid option group ID '{$submittedGroupId}' was submitted for product '{$product->name}'."
+                );
+                continue;
+            }
 
-        if ($invalidOptions->isNotEmpty()) {
-            $validator->errors()->add(
-                "products.{$index}.options.{$group->id}",
-                'Some selected options are not available for this group.'
-            );
+            $group = $productOptionGroups->get($submittedGroupId);
+            $validOptionsForGroup = $group->options->keyBy('id');
+
+            if ($group->type === ProductOptionGroupType::SINGLE_SELECT && count($submittedOptionIds) > 1) {
+                $validator->errors()->add(
+                    "items.{$itemIndex}.selected_options.{$submittedGroupId}",
+                    "Only one option can be selected for the group '{$group->name}'."
+                );
+            }
+
+            foreach ($submittedOptionIds as $optionId) {
+                if (!$validOptionsForGroup->has($optionId) || !$validOptionsForGroup->get($optionId)->is_active) {
+                    $validator->errors()->add(
+                        "items.{$itemIndex}.selected_options.{$submittedGroupId}",
+                        "Invalid or unavailable option ID '{$optionId}' was selected for group '{$group->name}'."
+                    );
+                }
+            }
         }
     }
 }

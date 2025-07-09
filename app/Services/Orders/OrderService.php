@@ -9,154 +9,119 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderItemOption;
 use App\Models\Product;
-use App\Models\ProductOption;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
-readonly class OrderService
+final class OrderService
 {
-    public function __construct(
-        private PriceCalculationService $priceCalculator
-    ) {}
-
-    public function createOrder(array $data): Order
+    /**
+     * Creates a new order from validated data and pre-fetched product models.
+     *
+     * @param array<string, mixed> $data The validated data from the StoreOrderRequest.
+     * @param \Illuminate\Support\Collection $products The hydrated product models from the FormRequest.
+     * @throws \Throwable
+     */
+    public function createOrder(array $data, Collection $products, int $userId = 1): Order
     {
-        return DB::transaction(function () use ($data) {
-            $cartPrice = $this->priceCalculator->calculateCartPrice($data['products']);
+        return DB::transaction(function () use ($data, $products, $userId) {
+            $hydratedCart = $this->buildHydratedCart($data['items'], $products);
+
+            $totals = $this->calculateTotals($hydratedCart);
 
             $order = Order::create([
-                'user_id' => auth()->id(),
+                'user_id' => 1,
                 'branch_id' => $data['branch_id'],
                 'status' => OrderStatus::PENDING,
-                'total_price' => $cartPrice['total_price'],
-                'estimated_preparation_time' => $this->calculateTotalPreparationTime($data['products']),
                 'payment_method' => $data['payment_method'],
+                'total_price' => $totals['totalPrice'],
+                'estimated_preparation_time' => $totals['totalPrepTime'],
                 'payment_reference' => $data['payment_reference'] ?? null,
                 'payment_provider' => $data['payment_provider'] ?? null,
                 'customer_note' => $data['customer_note'] ?? null,
-                'products_snapshot' => $this->createProductsSnapshot($data['products']),
             ]);
 
-            $this->createOrderItems($order, $data['products']);
+            $this->createOrderItems($order, $hydratedCart);
 
-            return $order->load(['items.options', 'branch']);
+            $order->load('items.options');
+
+            $order->update(['order_snapshot' => $order->toJson()]);
+
+            return $order;
         });
     }
 
-    private function createOrderItems(Order $order, array $products): void
+    /**
+     * Combines validated request data with pre-fetched Product models.
+     */
+    private function buildHydratedCart(array $cartItems, Collection $products): Collection
     {
-        foreach ($products as $productData) {
-            $product = $this->getProductWithOptions($productData['product_id']);
-            $selectedOptions = $this->getSelectedOptions($productData['options']);
-            $priceData = $this->priceCalculator->calculateItemPrice($product, $selectedOptions, $productData['quantity']);
+        return collect($cartItems)->map(function (array $item) use ($products) {
+            $product = $products->get($item['product_id']);
+            $allOptionsForProduct = $product->optionGroups->flatMap->options;
 
-            $orderItem = $this->createOrderItem($order, $product, $priceData, $productData['quantity']);
+            $selectedOptionIds = collect($item['selected_options'])->flatten()->all();
 
-            $this->createOrderItemOptions($orderItem, $selectedOptions, $productData['options']);
-        }
+            $selectedOptions = $allOptionsForProduct->whereIn('id', $selectedOptionIds);
+
+            return [
+                'product' => $product,
+                'quantity' => $item['quantity'],
+                'selected_options' => $selectedOptions,
+            ];
+        });
     }
 
-    private function calculateTotalPreparationTime(array $products): int
+    /**
+     * Calculates totals from the fully validated and hydrated cart data.
+     */
+    private function calculateTotals(Collection $hydratedCart): array
     {
-        $totalTime = 0;
+        return $hydratedCart->reduce(function ($carry, $item) {
+            /** @var Product $product */
+            $product = $item['product'];
+            $optionsPrice = $item['selected_options']->sum('extra_price');
+            $singleItemPrice = $product->price + $optionsPrice;
 
-        foreach ($products as $productData) {
-            $product = Product::find($productData['product_id']);
-            $totalTime += $product->estimated_preparation_time * $productData['quantity'];
-        }
+            $carry['totalPrice'] += $singleItemPrice * $item['quantity'];
+            $carry['totalPrepTime'] += $product->estimated_preparation_time;
 
-        return $totalTime;
+            return $carry;
+        }, ['totalPrice' => 0.0, 'totalPrepTime' => 0]);
     }
 
-    private function createProductsSnapshot(array $products): array
+    /**
+     * Creates and persists OrderItem and OrderItemOption records.
+     */
+    private function createOrderItems(Order $order, Collection $hydratedCart): void
     {
-        $snapshot = [];
+        foreach ($hydratedCart as $itemData) {
+            /** @var Product $product */
+            $product = $itemData['product'];
+            /** @var Collection $selectedOptions */
+            $selectedOptions = $itemData['selected_options'];
 
-        foreach ($products as $productData) {
-            $product = Product::find($productData['product_id']);
-            $snapshot[] = $this->createProductSnapshot($product);
-        }
+            $itemBasePrice = $product->price;
+            $optionsPrice = $selectedOptions->sum('extra_price');
 
-        return $snapshot;
-    }
+            $orderItem = $order->items()->create([
+                'product_id' => $product->id,
+                'product_base_price' => $itemBasePrice,
+                'quantity' => $itemData['quantity'],
+                'item_total_price' => ($itemBasePrice + $optionsPrice) * $itemData['quantity'],
+            ]);
 
-    private function getProductWithOptions(int $productId): Product
-    {
-        return Product::with([
-            'optionGroups:id,product_id,name_en,name_ar,type,is_required',
-            'optionGroups.options:id,product_option_group_id,name_en,name_ar,extra_price,is_active',
-        ])->findOrFail($productId);
-    }
-
-    private function getSelectedOptions(array $optionData): Collection
-    {
-        $optionIds = collect($optionData)->flatten()->unique();
-
-        return ProductOption::with([
-            'optionGroup:id,name_en,name_ar,type,is_required',
-        ])
-            ->whereIn('id', $optionIds)
-            ->where('is_active', true)
-            ->get()
-            ->keyBy('id');
-    }
-
-    private function createProductSnapshot(Product $product): array
-    {
-        return [
-            'id' => $product->id,
-            'name' => $product->name,
-            'price' => $product->price,
-            'estimated_preparation_time' => $product->estimated_preparation_time,
-            'category' => $product->category?->name,
-            'is_active' => $product->is_active,
-            'created_at' => $product->created_at,
-            'snapshot_taken_at' => now(),
-        ];
-    }
-
-    private function createOrderItem(Order $order, Product $product, array $priceData, int $quantity): OrderItem
-    {
-        return OrderItem::create([
-            'order_id' => $order->id,
-            'product_id' => $product->id,
-            'product_name' => $product->name,
-            'product_base_price' => $product->price,
-            'product_preparation_time' => $product->estimated_preparation_time,
-            'product_snapshot' => $this->createProductSnapshot($product),
-            'quantity' => $quantity,
-            'item_total_price' => $priceData['total_price'],
-        ]);
-    }
-
-    private function createOrderItemOptions(OrderItem $orderItem, Collection $selectedOptions, array $optionData): void
-    {
-        $optionInserts = collect($optionData)->flatMap(function ($optionIds, $groupId) use ($orderItem, $selectedOptions) {
-            return collect($optionIds)->map(function ($optionId) use ($orderItem, $selectedOptions, $groupId) {
-                $option = $selectedOptions->get($optionId);
-
-                if ( ! $option) {
-                    return null;
-                }
-
-                return [
+            if ($selectedOptions->isNotEmpty()) {
+                $optionsToInsert = $selectedOptions->map(fn($option) => [
                     'order_item_id' => $orderItem->id,
-                    'product_option_group_id' => $groupId,
-                    'product_option_id' => $optionId,
-                    'group_name' => $option->optionGroup->name,
-                    'group_type' => $option->optionGroup->type,
-                    'group_is_required' => $option->optionGroup->is_required,
-                    'option_name' => $option->name,
-                    'option_description' => $option->description,
-                    'option_extra_price' => $option->extra_price,
+                    'product_option_group_id' => $option->product_option_group_id,
+                    'product_option_id' => $option->id,
                     'created_at' => now(),
                     'updated_at' => now(),
-                ];
-            });
-        })->filter()->toArray();
+                ]);
 
-        if ( ! empty($optionInserts)) {
-            OrderItemOption::insert($optionInserts);
+                $orderItem->options()->insert($optionsToInsert->all());
+            }
         }
     }
 }

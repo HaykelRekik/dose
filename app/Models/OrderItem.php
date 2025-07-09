@@ -13,10 +13,7 @@ class OrderItem extends Model
     protected $fillable = [
         'order_id',
         'product_id',
-        'product_name',
         'product_base_price',
-        'product_preparation_time',
-        'product_snapshot',
         'quantity',
         'item_total_price',
     ];
@@ -43,7 +40,6 @@ class OrderItem extends Model
         return [
             'product_base_price' => 'decimal:2',
             'item_total_price' => 'decimal:2',
-            'product_snapshot' => 'array',
         ];
     }
 }

@@ -6,8 +6,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class() extends Migration
-{
+return new class() extends Migration {
     /**
      * Run the migrations.
      */
@@ -18,18 +17,10 @@ return new class() extends Migration
             $table->foreignId('order_id')->constrained()->onDelete('cascade');
             $table->foreignId('product_id')->nullable()->constrained()->nullOnDelete();
 
-            // Snapshot fields
-            $table->string('product_name');
             $table->decimal('product_base_price', 10, 2);
-            $table->integer('product_preparation_time')->nullable();
-            $table->json('product_snapshot')->nullable(); // Full product snapshot
-
             $table->integer('quantity')->default(1);
             $table->decimal('item_total_price', 10, 2);
             $table->timestamps();
-
-            $table->index('order_id');
-            $table->index('product_id');
         });
     }
 

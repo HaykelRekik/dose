@@ -19,17 +19,7 @@ return new class() extends Migration
             $table->foreignId('product_option_group_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('product_option_id')->nullable()->constrained()->nullOnDelete();
 
-            // Snapshot fields
-            $table->string('group_name');
-            $table->string('group_type');
-            $table->boolean('group_is_required');
-            $table->string('option_name');
-            $table->text('option_description')->nullable();
-            $table->decimal('option_extra_price', 10, 2)->default(0);
-
             $table->timestamps();
-
-            $table->index('order_item_id');
         });
     }
 

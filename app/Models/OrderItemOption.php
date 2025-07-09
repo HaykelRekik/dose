@@ -13,12 +13,6 @@ class OrderItemOption extends Model
         'order_item_id',
         'product_option_group_id',
         'product_option_id',
-        'group_name',
-        'group_type',
-        'group_is_required',
-        'option_name',
-        'option_description',
-        'option_extra_price',
     ];
 
     public function orderItem(): BelongsTo

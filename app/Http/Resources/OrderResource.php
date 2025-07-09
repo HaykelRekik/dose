@@ -16,25 +16,17 @@ class OrderResource extends JsonResource
         return [
             'id' => $this->id,
             'order_number' => $this->order_number,
-            'status' => $this->status->value,
-            'customer' => $this->customer->name,
+            'status' => $this->status,
             'total_price' => $this->total_price,
             'estimated_preparation_time' => $this->estimated_preparation_time,
-            'ready_at' => $this->ready_at?->toISOString(),
-            'payment' => [
-                'method' => $this->payment_method?->value,
-                'method_label' => $this->payment_method?->getLabel(),
-                'reference' => $this->payment_reference,
-                'provider' => $this->payment_provider,
-            ],
+            'payment_method' => $this->payment_method,
             'customer_note' => $this->customer_note,
+            'created_at' => $this->created_at->toIso8601String(),
             'branch' => [
-                'id' => $this->branch->id,
-                'name' => $this->branch->name,
+                'id' => $this->whenLoaded('branch', fn() => $this->branch->id),
+                'name' => $this->whenLoaded('branch', fn() => $this->branch->name),
             ],
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
-            'created_at' => $this->created_at->toISOString(),
-            'updated_at' => $this->updated_at->toISOString(),
         ];
     }
 }

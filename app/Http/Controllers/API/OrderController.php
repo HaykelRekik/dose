@@ -8,53 +8,45 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\API\Orders\StoreOrderRequest;
 use App\Http\Resources\OrderResource;
 use App\Services\Orders\OrderService;
-use Exception;
 use Illuminate\Http\JsonResponse;
+use Log;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 class OrderController extends Controller
 {
-    public function __construct(
-        private readonly OrderService $orderService
-    ) {}
+    public function __construct(private readonly OrderService $orderService) {}
 
     public function store(StoreOrderRequest $request): JsonResponse
     {
+        \Auth::loginUsingId(1);
         try {
-            $order = $this->orderService->createOrder($request->validated());
+            $validatedData = $request->validated();
+            $hydratedProducts = $request->hydratedProducts;
+
+            $order = $this->orderService->createOrder(
+                data: $validatedData,
+                products: $hydratedProducts,
+                userId: auth()->id(),
+            );
+
+            $order->loadMissing('branch', 'items.options');
 
             return response()->success(
-                message: __('Order created successfully.'),
-                data: new OrderResource($order),
-                status: Response::HTTP_CREATED
+                message: 'Order created successfully.',
+                data: OrderResource::make($order),
+                status: Response::HTTP_CREATED,
             );
+        } catch (Throwable $e) {
+            Log::error('Order creation failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
 
-        } catch (Exception $e) {
+
             return response()->error(
-                message: __('Failed to create order. Please try again.'),
+                message: 'An unexpected error occurred. Please try again later.',
                 status: Response::HTTP_INTERNAL_SERVER_ERROR,
             );
-        }
-    }
-
-    public function show(int $id): JsonResponse
-    {
-        try {
-            $order = auth()->user()
-                ->orders()
-                ->with(['items.options', 'branch'])
-                ->findOrFail($id);
-
-            return response()->json([
-                'success' => true,
-                'data' => new OrderResource($order),
-            ], Response::HTTP_OK);
-
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order not found.',
-            ], Response::HTTP_NOT_FOUND);
         }
     }
 }

@@ -30,7 +30,7 @@ return new class() extends Migration
 
             $table->text('customer_note')->nullable();
 
-            $table->json('products_snapshot')->nullable();
+            $table->json('order_snapshot')->nullable();
 
             $table->timestamps();
 

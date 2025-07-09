@@ -27,7 +27,7 @@ class Order extends Model
         'payment_reference',
         'payment_provider',
         'customer_note',
-        'products_snapshot',
+        'order_snapshot',
     ];
 
     public function customer(): BelongsTo
@@ -74,7 +74,7 @@ class Order extends Model
             'payment_method' => PaymentMethod::class,
             'total_price' => 'decimal:2',
             'ready_at' => 'datetime',
-            'products_snapshot' => 'array',
+            'order_snapshot' => 'array',
         ];
     }
 }
