@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\API\BranchController;
 use App\Http\Controllers\API\CategoryController;
+use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\API\ProductController;
 
 Route::prefix('categories')->group(function (): void {
@@ -19,4 +20,8 @@ Route::prefix('products')->group(function (): void {
 Route::prefix('branches')->group(function (): void {
     Route::get('/', [BranchController::class, 'index']);
     Route::get('/{branch}', [BranchController::class, 'show']);
+});
+
+Route::prefix('orders')->group(function (): void {
+    Route::post('/', [OrderController::class, 'store']);
 });
