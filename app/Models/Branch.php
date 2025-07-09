@@ -31,6 +31,11 @@ class Branch extends Model
         return $this->hasMany(User::class, 'branch_id');
     }
 
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
     protected function casts(): array
     {
         return [

@@ -7,7 +7,6 @@ namespace App\Http\Requests\API\Orders;
 use App\Enums\PaymentMethod;
 use App\Enums\ProductOptionGroupType;
 use App\Models\Product;
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
@@ -18,7 +17,6 @@ class StoreOrderRequest extends FormRequest
 {
     /**
      * Pre-fetched and validated product models to avoid re-querying in the service.
-     * @var \Illuminate\Support\Collection|null
      */
     public ?Collection $hydratedProducts = null;
 
@@ -33,7 +31,7 @@ class StoreOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'branch_id' => ['required', 'integer', Rule::exists('branches', 'id')->where('is_active', true),],
+            'branch_id' => ['required', 'integer', Rule::exists('branches', 'id')->where('is_active', true)],
             'payment_method' => ['required', new Enum(PaymentMethod::class)],
             'payment_reference' => ['nullable', 'string', 'max:255'],
             'payment_provider' => ['nullable', 'string', 'max:255'],
@@ -74,7 +72,7 @@ class StoreOrderRequest extends FormRequest
             return;
         }
 
-        $validator->after(function ($validator) {
+        $validator->after(function ($validator): void {
             $items = collect($this->input('items', []));
             $productIds = $items->pluck('product_id')->unique()->all();
 
@@ -85,10 +83,11 @@ class StoreOrderRequest extends FormRequest
 
             $this->hydratedProducts = $products;
 
-
             foreach ($items as $index => $item) {
                 $product = $products->get($item['product_id']);
-                if (!$product) continue;
+                if ( ! $product) {
+                    continue;
+                }
 
                 $this->validateProductOptions($validator, $product, $item['selected_options'], $index);
             }
@@ -112,18 +111,19 @@ class StoreOrderRequest extends FormRequest
         }
 
         foreach ($selectedOptions as $submittedGroupId => $submittedOptionIds) {
-            if (!$productOptionGroups->has($submittedGroupId)) {
+            if ( ! $productOptionGroups->has($submittedGroupId)) {
                 $validator->errors()->add(
                     "items.{$itemIndex}.selected_options",
                     "Invalid option group ID '{$submittedGroupId}' was submitted for product '{$product->name}'."
                 );
+
                 continue;
             }
 
             $group = $productOptionGroups->get($submittedGroupId);
             $validOptionsForGroup = $group->options->keyBy('id');
 
-            if ($group->type === ProductOptionGroupType::SINGLE_SELECT && count($submittedOptionIds) > 1) {
+            if (ProductOptionGroupType::SINGLE_SELECT === $group->type && count($submittedOptionIds) > 1) {
                 $validator->errors()->add(
                     "items.{$itemIndex}.selected_options.{$submittedGroupId}",
                     "Only one option can be selected for the group '{$group->name}'."
@@ -131,7 +131,7 @@ class StoreOrderRequest extends FormRequest
             }
 
             foreach ($submittedOptionIds as $optionId) {
-                if (!$validOptionsForGroup->has($optionId) || !$validOptionsForGroup->get($optionId)->is_active) {
+                if ( ! $validOptionsForGroup->has($optionId) || ! $validOptionsForGroup->get($optionId)->is_active) {
                     $validator->errors()->add(
                         "items.{$itemIndex}.selected_options.{$submittedGroupId}",
                         "Invalid or unavailable option ID '{$optionId}' was selected for group '{$group->name}'."

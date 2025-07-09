@@ -7,24 +7,26 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\API\Orders\StoreOrderRequest;
 use App\Http\Resources\OrderResource;
+use App\Models\Order;
 use App\Services\Orders\OrderService;
+use Auth;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Log;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
-use App\Models\Order;
-use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    public function __construct(private readonly OrderService $orderService) {
-        \Auth::loginUsingId(2);
+    public function __construct(private readonly OrderService $orderService)
+    {
+        Auth::loginUsingId(2);
 
     }
 
     public function index(Request $request): JsonResponse
     {
-        \Auth::loginUsingId(2);
+        Auth::loginUsingId(2);
         $orders = $request->user()->orders()->latest()->paginate(10);
 
         return response()->success(
@@ -72,7 +74,6 @@ class OrderController extends Controller
             Log::error('Order creation failed: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
-
 
             return response()->error(
                 message: 'An unexpected error occurred. Please try again later.',

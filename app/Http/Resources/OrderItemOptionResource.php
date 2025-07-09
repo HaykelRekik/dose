@@ -15,9 +15,9 @@ class OrderItemOptionResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'group_name' => $this->whenLoaded('optionGroup', fn() => $this->optionGroup->name),
-            'option_name' => $this->whenLoaded('option', fn() => $this->option->name),
-            'extra_price' => $this->whenLoaded('option', fn() => $this->option->extra_price),
+            'group_name' => $this->whenLoaded('optionGroup', fn () => $this->optionGroup->name),
+            'option_name' => $this->whenLoaded('option', fn () => $this->option->name),
+            'extra_price' => $this->whenLoaded('option', fn () => $this->option->extra_price),
         ];
     }
 }

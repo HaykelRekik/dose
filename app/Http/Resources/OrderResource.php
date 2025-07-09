@@ -22,10 +22,7 @@ class OrderResource extends JsonResource
             'payment_method' => $this->payment_method,
             'customer_note' => $this->customer_note,
             'created_at' => $this->created_at->toIso8601String(),
-            'branch' => [
-                'id' => $this->whenLoaded('branch', fn() => $this->branch->id),
-                'name' => $this->whenLoaded('branch', fn() => $this->branch->name),
-            ],
+            'branch' => BranchResource::make($this->whenLoaded('branch')),
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
         ];
     }

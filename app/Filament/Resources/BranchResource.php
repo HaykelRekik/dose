@@ -73,6 +73,17 @@ class BranchResource extends Resource
                     ->searchable(['address_en', 'address_ar']),
                 PhoneColumn::make('phone')
                     ->label(__('Phone')),
+
+                Tables\Columns\TextColumn::make('orders_count')
+                    ->counts('orders')
+                    ->label(__('Orders count'))
+                    ->suffix(' ' . __('orders')),
+
+                Tables\Columns\TextColumn::make('orders_sum_total_price')
+                    ->sum('orders', 'total_price')
+                    ->label(__('Orders Amount'))
+                    ->saudiRiyal(),
+
                 Tables\Columns\TextColumn::make('employees_count')
                     ->counts('employees')
                     ->label(__('Employees count'))

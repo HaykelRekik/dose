@@ -18,9 +18,10 @@ final class OrderService
     /**
      * Creates a new order from validated data and pre-fetched product models.
      *
-     * @param array<string, mixed> $data The validated data from the StoreOrderRequest.
-     * @param \Illuminate\Support\Collection $products The hydrated product models from the FormRequest.
-     * @throws \Throwable
+     * @param  array<string, mixed>  $data  The validated data from the StoreOrderRequest.
+     * @param  Collection  $products  The hydrated product models from the FormRequest.
+     *
+     * @throws Throwable
      */
     public function createOrder(array $data, Collection $products): Order
     {
@@ -140,7 +141,7 @@ final class OrderService
             }
         }
 
-        if (!empty($orderItemOptions)) {
+        if ( ! empty($orderItemOptions)) {
             OrderItemOption::insert($orderItemOptions);
         }
     }
