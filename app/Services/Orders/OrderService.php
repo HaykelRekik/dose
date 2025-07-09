@@ -95,6 +95,9 @@ final class OrderService
      */
     private function createOrderItems(Order $order, Collection $hydratedCart): void
     {
+        $orderItems = [];
+        $orderItemOptions = [];
+
         foreach ($hydratedCart as $itemData) {
             /** @var Product $product */
             $product = $itemData['product'];
@@ -104,24 +107,41 @@ final class OrderService
             $itemBasePrice = $product->price;
             $optionsPrice = $selectedOptions->sum('extra_price');
 
-            $orderItem = $order->items()->create([
+            $orderItems[] = [
+                'order_id' => $order->id,
                 'product_id' => $product->id,
                 'product_base_price' => $itemBasePrice,
                 'quantity' => $itemData['quantity'],
                 'item_total_price' => ($itemBasePrice + $optionsPrice) * $itemData['quantity'],
-            ]);
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+
+        OrderItem::insert($orderItems);
+
+        $createdItems = $order->items()->get();
+
+        foreach ($hydratedCart as $index => $itemData) {
+            /** @var Collection $selectedOptions */
+            $selectedOptions = $itemData['selected_options'];
 
             if ($selectedOptions->isNotEmpty()) {
-                $optionsToInsert = $selectedOptions->map(fn($option) => [
-                    'order_item_id' => $orderItem->id,
-                    'product_option_group_id' => $option->product_option_group_id,
-                    'product_option_id' => $option->id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                $orderItem->options()->insert($optionsToInsert->all());
+                $currentItem = $createdItems[$index];
+                foreach ($selectedOptions as $option) {
+                    $orderItemOptions[] = [
+                        'order_item_id' => $currentItem->id,
+                        'product_option_group_id' => $option->product_option_group_id,
+                        'product_option_id' => $option->id,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
             }
+        }
+
+        if (!empty($orderItemOptions)) {
+            OrderItemOption::insert($orderItemOptions);
         }
     }
 }
