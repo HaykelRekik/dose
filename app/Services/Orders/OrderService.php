@@ -22,15 +22,15 @@ final class OrderService
      * @param \Illuminate\Support\Collection $products The hydrated product models from the FormRequest.
      * @throws \Throwable
      */
-    public function createOrder(array $data, Collection $products, int $userId = 1): Order
+    public function createOrder(array $data, Collection $products): Order
     {
-        return DB::transaction(function () use ($data, $products, $userId) {
+        return DB::transaction(function () use ($data, $products) {
             $hydratedCart = $this->buildHydratedCart($data['items'], $products);
 
             $totals = $this->calculateTotals($hydratedCart);
 
             $order = Order::create([
-                'user_id' => 1,
+                'user_id' => auth()->id(),
                 'branch_id' => $data['branch_id'],
                 'status' => OrderStatus::PENDING,
                 'payment_method' => $data['payment_method'],
@@ -43,9 +43,9 @@ final class OrderService
 
             $this->createOrderItems($order, $hydratedCart);
 
-            $order->load('items.options');
+            $order->load('items.options.option', 'items.options.optionGroup');
 
-            $order->update(['order_snapshot' => $order->toJson()]);
+            $order->update(['order_snapshot' => $order->toArray()]);
 
             return $order;
         });

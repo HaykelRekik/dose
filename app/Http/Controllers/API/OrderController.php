@@ -19,7 +19,6 @@ class OrderController extends Controller
 
     public function store(StoreOrderRequest $request): JsonResponse
     {
-        \Auth::loginUsingId(1);
         try {
             $validatedData = $request->validated();
             $hydratedProducts = $request->hydratedProducts;
@@ -27,7 +26,6 @@ class OrderController extends Controller
             $order = $this->orderService->createOrder(
                 data: $validatedData,
                 products: $hydratedProducts,
-                userId: auth()->id(),
             );
 
             $order->loadMissing('branch', 'items.options');

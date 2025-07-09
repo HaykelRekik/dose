@@ -14,9 +14,10 @@ class OrderItemOptionResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'group_name' => $this->group_name,
-            'option_name' => $this->option_name,
-            'extra_price' => $this->option_extra_price,
+            'id' => $this->id,
+            'option_name' => $this->whenLoaded('option', fn() => $this->option->name),
+            'group_name' => $this->whenLoaded('optionGroup', fn() => $this->optionGroup->name),
+            'extra_price' => $this->whenLoaded('option', fn() => $this->option->extra_price),
         ];
     }
 }
