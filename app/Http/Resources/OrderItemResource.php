@@ -18,7 +18,7 @@ class OrderItemResource extends JsonResource
             'quantity' => $this->quantity,
             'base_price' => $this->product_base_price,
             'total_price' => $this->item_total_price,
-            'options' => OrderItemOptionResource::collection($this->whenLoaded('options')),
+//            'options' => OrderItemOptionResource::collection($this->whenLoaded('options')),
         ];
     }
 }

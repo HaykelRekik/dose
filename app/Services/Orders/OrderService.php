@@ -84,7 +84,7 @@ final class OrderService
             $singleItemPrice = $product->price + $optionsPrice;
 
             $carry['totalPrice'] += $singleItemPrice * $item['quantity'];
-            $carry['totalPrepTime'] += $product->estimated_preparation_time;
+            $carry['totalPrepTime'] += $product->estimated_preparation_time * $item['quantity'];
 
             return $carry;
         }, ['totalPrice' => 0.0, 'totalPrepTime' => 0]);

@@ -33,7 +33,7 @@ class StoreOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'branch_id' => ['required', 'integer', 'exists:branches,id'],
+            'branch_id' => ['required', 'integer', Rule::exists('branches', 'id')->where('is_active', true),],
             'payment_method' => ['required', new Enum(PaymentMethod::class)],
             'payment_reference' => ['nullable', 'string', 'max:255'],
             'payment_provider' => ['nullable', 'string', 'max:255'],
@@ -58,6 +58,7 @@ class StoreOrderRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'branch_id.where' => 'The selected branch is not accepting orders at the moment.',
             'items.*.product_id.exists' => 'One of the selected products is not available.',
             'items.*.selected_options.array' => 'The selected_options must be a valid object.',
             'items.*.selected_options.*.array' => 'Each option group must contain an array of selections.',
