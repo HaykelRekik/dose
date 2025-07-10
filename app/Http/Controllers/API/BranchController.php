@@ -18,8 +18,8 @@ class BranchController extends Controller
         $branches = Cache::flexible(
             key: 'branches',
             ttl: [
-                5,
-                60,
+                5 * 60,
+                30 * 60,
             ],
             callback: fn () => Branch::active()->get(),
         );
@@ -42,8 +42,8 @@ class BranchController extends Controller
         $branch = Cache::flexible(
             key: 'branch:' . $branch->id,
             ttl: [
-                5,
-                30,
+                5 * 60,
+                30 * 60,
             ],
             callback: fn () => $branch,
         );

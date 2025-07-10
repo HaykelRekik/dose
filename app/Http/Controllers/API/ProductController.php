@@ -42,11 +42,10 @@ class ProductController extends Controller
         $product = Cache::flexible(
             key: 'product:' . $product->id,
             ttl: [
-                5, // Fresh period
-                30, // Total lifespan (fresh + grace period)
+                5 * 60,
+                30 * 60,
             ],
             callback: fn () => $product->load('categories', 'optionGroups.options'),
-            lock: ['seconds' => 10]
         );
 
         return response()->success(

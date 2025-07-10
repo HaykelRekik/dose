@@ -5,30 +5,34 @@ declare(strict_types=1);
 namespace App\Services\Orders;
 
 use App\Enums\OrderStatus;
-use App\Enums\UserRole;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderItemOption;
 use App\Models\Product;
-use App\Models\User;
-use Filament\Notifications\Notification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 use Throwable;
 
-final class OrderService
+final readonly class OrderService
 {
+    public function __construct(
+        private OrderNotificationService $notificationService
+    ) {}
+
     /**
-     * Creates a new order from validated data and pre-fetched product models.
+     * Creates a new order from validated data.
+     * Products are fetched securely within the service to avoid security vulnerabilities.
      *
      * @param  array<string, mixed>  $data  The validated data from the StoreOrderRequest.
-     * @param  Collection  $products  The hydrated product models from the FormRequest.
      *
      * @throws Throwable
      */
-    public function createOrder(array $data, Collection $products): Order
+    public function createOrder(array $data): Order
     {
-        return DB::transaction(callback: function () use ($data, $products) {
+        return DB::transaction(callback: function () use ($data) {
+            $products = $this->fetchValidatedProducts($data['items']);
+
             $hydratedCart = $this->buildHydratedCart($data['items'], $products);
 
             $totals = $this->calculateTotals($hydratedCart);
@@ -51,15 +55,47 @@ final class OrderService
 
             $order->update(attributes: ['order_snapshot' => $order->toArray()]);
 
-            /** @var Order $order */
-            $this->sendNewOrderNotification(branchId: $order->branch_id);
+            $this->notificationService->sendNewOrderNotification(branchId: $order->branch_id);
 
             return $order;
         });
     }
 
     /**
-     * Combines validated request data with pre-fetched Product models.
+     * Fetch and validate products from the database based on cart items.
+     * This ensures data integrity and prevents security vulnerabilities.
+     *
+     * @param  array<int, array<string, mixed>>  $cartItems
+     * @return Collection<int, Product>
+     *
+     * @throws InvalidArgumentException
+     */
+    private function fetchValidatedProducts(array $cartItems): Collection
+    {
+        $productIds = collect($cartItems)->pluck('product_id')->unique()->all();
+
+        $products = Product::with('optionGroups.options')
+            ->whereIn('id', $productIds)
+            ->where('is_active', true)
+            ->get()
+            ->keyBy('id');
+
+        // Validate that all requested products exist and are active
+        foreach ($productIds as $productId) {
+            if ( ! $products->has($productId)) {
+                throw new InvalidArgumentException(__('Product with ID :id is not available.', ['id' => $productId]));
+            }
+        }
+
+        return $products;
+    }
+
+    /**
+     * Combines validated request data with securely fetched Product models.
+     *
+     * @param  array<int, array<string, mixed>>  $cartItems
+     * @param  Collection<int, Product>  $products
+     * @return Collection<int, array<string, mixed>>
      */
     private function buildHydratedCart(array $cartItems, Collection $products): Collection
     {
@@ -81,6 +117,9 @@ final class OrderService
 
     /**
      * Calculates totals from the fully validated and hydrated cart data.
+     *
+     * @param  Collection<int, array<string, mixed>>  $hydratedCart
+     * @return array{totalPrice: float, totalPrepTime: int}
      */
     private function calculateTotals(Collection $hydratedCart): array
     {
@@ -99,6 +138,8 @@ final class OrderService
 
     /**
      * Creates and persists OrderItem and OrderItemOption records.
+     *
+     * @param  Collection<int, array<string, mixed>>  $hydratedCart
      */
     private function createOrderItems(Order $order, Collection $hydratedCart): void
     {
@@ -150,21 +191,5 @@ final class OrderService
         if ( ! empty($orderItemOptions)) {
             OrderItemOption::insert($orderItemOptions);
         }
-    }
-
-    private function sendNewOrderNotification(string|int $branchId): void
-    {
-        User::query()
-            ->role(UserRole::EMPLOYEE)
-            ->where('branch_id', $branchId)
-            ->each(function (User $employee): void {
-                $employee->notify(
-                    Notification::make('new_order')
-                        ->success()
-                        ->title(__('New order'))
-                        ->body(__('A new order has been placed.'))
-                        ->toDatabase()
-                );
-            });
     }
 }

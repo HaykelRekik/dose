@@ -8,18 +8,12 @@ use App\Enums\PaymentMethod;
 use App\Enums\ProductOptionGroupType;
 use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Validator;
 
 class StoreOrderRequest extends FormRequest
 {
-    /**
-     * Pre-fetched and validated product models to avoid re-querying in the service.
-     */
-    public ?Collection $hydratedProducts = null;
-
     public function authorize(): bool
     {
         return true;
@@ -56,10 +50,10 @@ class StoreOrderRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'branch_id.where' => 'The selected branch is not accepting orders at the moment.',
-            'items.*.product_id.exists' => 'One of the selected products is not available.',
-            'items.*.selected_options.array' => 'The selected_options must be a valid object.',
-            'items.*.selected_options.*.array' => 'Each option group must contain an array of selections.',
+            'branch_id.where' => __('The selected branch is not accepting orders at the moment.'),
+            'items.*.product_id.exists' => __('One of the selected products is not available.'),
+            'items.*.selected_options.array' => __('The selected_options must be a valid object.'),
+            'items.*.selected_options.*.array' => __('Each option group must contain an array of selections.'),
         ];
     }
 
@@ -78,10 +72,9 @@ class StoreOrderRequest extends FormRequest
 
             $products = Product::with('optionGroups.options')
                 ->whereIn('id', $productIds)
+                ->where('is_active', true)
                 ->get()
                 ->keyBy('id');
-
-            $this->hydratedProducts = $products;
 
             foreach ($items as $index => $item) {
                 $product = $products->get($item['product_id']);
@@ -105,7 +98,10 @@ class StoreOrderRequest extends FormRequest
             if ($group->is_required && empty($selectedOptions[$groupId])) {
                 $validator->errors()->add(
                     "items.{$itemIndex}.selected_options",
-                    "A selection for the required group '{$group->name}' is missing for product '{$product->name}'."
+                    __('A selection for the required group :group is missing for product :product.', [
+                        'group' => $group->name,
+                        'product' => $product->name,
+                    ])
                 );
             }
         }
@@ -114,7 +110,10 @@ class StoreOrderRequest extends FormRequest
             if ( ! $productOptionGroups->has($submittedGroupId)) {
                 $validator->errors()->add(
                     "items.{$itemIndex}.selected_options",
-                    "Invalid option group ID '{$submittedGroupId}' was submitted for product '{$product->name}'."
+                    __('Invalid option group ID :groupId was submitted for product :product.', [
+                        'groupId' => $submittedGroupId,
+                        'product' => $product->name,
+                    ])
                 );
 
                 continue;
@@ -126,7 +125,9 @@ class StoreOrderRequest extends FormRequest
             if (ProductOptionGroupType::SINGLE_SELECT === $group->type && count($submittedOptionIds) > 1) {
                 $validator->errors()->add(
                     "items.{$itemIndex}.selected_options.{$submittedGroupId}",
-                    "Only one option can be selected for the group '{$group->name}'."
+                    __('Only one option can be selected for the group :group.', [
+                        'group' => $group->name,
+                    ])
                 );
             }
 
@@ -134,7 +135,10 @@ class StoreOrderRequest extends FormRequest
                 if ( ! $validOptionsForGroup->has($optionId) || ! $validOptionsForGroup->get($optionId)->is_active) {
                     $validator->errors()->add(
                         "items.{$itemIndex}.selected_options.{$submittedGroupId}",
-                        "Invalid or unavailable option ID '{$optionId}' was selected for group '{$group->name}'."
+                        __('Invalid or unavailable option ID :optionId was selected for group :group.', [
+                            'optionId' => $optionId,
+                            'group' => $group->name,
+                        ])
                     );
                 }
             }

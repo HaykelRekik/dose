@@ -30,7 +30,7 @@ class OrderController extends Controller
         $orders = $request->user()->orders()->latest()->paginate(10);
 
         return response()->success(
-            message: 'Orders retrieved successfully.',
+            message: __('Orders retrieved successfully.'),
             data: OrderResource::collection($orders),
         );
     }
@@ -39,7 +39,7 @@ class OrderController extends Controller
     {
         if ($order->user_id !== auth()->id()) {
             return response()->error(
-                message: 'Unauthorized.',
+                message: __('Unauthorized.'),
                 status: Response::HTTP_FORBIDDEN,
             );
         }
@@ -47,7 +47,7 @@ class OrderController extends Controller
         $order->loadMissing('branch', 'items.options.option', 'items.options.optionGroup');
 
         return response()->success(
-            message: 'Order retrieved successfully.',
+            message: __('Order retrieved successfully.'),
             data: OrderResource::make($order),
         );
     }
@@ -56,17 +56,13 @@ class OrderController extends Controller
     {
         try {
             $validatedData = $request->validated();
-            $hydratedProducts = $request->hydratedProducts;
 
-            $order = $this->orderService->createOrder(
-                data: $validatedData,
-                products: $hydratedProducts,
-            );
+            $order = $this->orderService->createOrder(data: $validatedData);
 
             $order->loadMissing('branch', 'items.options.option', 'items.options.optionGroup');
 
             return response()->success(
-                message: 'Order created successfully.',
+                message: __('Order created successfully.'),
                 data: OrderResource::make($order),
                 status: Response::HTTP_CREATED,
             );
@@ -76,7 +72,7 @@ class OrderController extends Controller
             ]);
 
             return response()->error(
-                message: 'An unexpected error occurred. Please try again later.',
+                message: __('An unexpected error occurred. Please try again later.'),
                 status: Response::HTTP_INTERNAL_SERVER_ERROR,
             );
         }

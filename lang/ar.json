@@ -311,5 +311,18 @@
     "orders": "الطلبات",
     "Orders Amount": "إجمالي الطلبات",
     "New order": "طلب جديد",
-    "A new order has been placed.": "تم تقديم طلب جديد."
+    "A new order has been placed.": "تم تقديم طلب جديد.",
+    "Product with ID :id is not available.": "المنتج برقم :id غير متوفر.",
+    "The selected branch is not accepting orders at the moment.": "الفرع المحدد لا يقبل الطلبات في الوقت الحالي.",
+    "One of the selected products is not available.": "أحد المنتجات المحددة غير متوفر.",
+    "The selected_options must be a valid object.": "يجب أن تكون الخيارات المحددة كائناً صالحاً.",
+    "Each option group must contain an array of selections.": "يجب أن تحتوي كل مجموعة خيارات على مصفوفة من الاختيارات.",
+    "A selection for the required group :group is missing for product :product.": "اختيار للمجموعة المطلوبة :group مفقود للمنتج :product.",
+    "Invalid option group ID :groupId was submitted for product :product.": "تم إرسال معرف مجموعة خيارات غير صالح :groupId للمنتج :product.",
+    "Only one option can be selected for the group :group.": "يمكن اختيار خيار واحد فقط للمجموعة :group.",
+    "Invalid or unavailable option ID :optionId was selected for group :group.": "تم اختيار معرف خيار غير صالح أو غير متوفر :optionId للمجموعة :group.",
+    "Orders retrieved successfully.": "تم استرداد الطلبات بنجاح.",
+    "Order retrieved successfully.": "تم استرداد الطلب بنجاح.",
+    "Order created successfully.": "تم إنشاء الطلب بنجاح.",
+    "An unexpected error occurred. Please try again later.": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى لاحقاً."
 }
