@@ -306,5 +306,10 @@
     "Not specified" : "غير مُحدَّد",
     "Branch details": "تفاصيل الفرع",
     "Employees management": "إدارة الموظفين",
-    "Branch employees management": "إدارة موظفي الفرع"
+    "Branch employees management": "إدارة موظفي الفرع",
+    "Orders count": "عدد الطلبات",
+    "orders": "الطلبات",
+    "Orders Amount": "إجمالي الطلبات",
+    "New order": "طلب جديد",
+    "A new order has been placed.": "تم تقديم طلب جديد."
 }

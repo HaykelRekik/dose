@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace App\Services\Orders;
 
 use App\Enums\OrderStatus;
+use App\Enums\UserRole;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderItemOption;
 use App\Models\Product;
+use App\Models\User;
+use Filament\Notifications\Notification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -47,6 +50,8 @@ final class OrderService
             $order->load('items.options.option', 'items.options.optionGroup');
 
             $order->update(['order_snapshot' => $order->toArray()]);
+
+            $this->sendNewOrderNotification(branchId: $order->branch_id);
 
             return $order;
         });
@@ -144,5 +149,21 @@ final class OrderService
         if ( ! empty($orderItemOptions)) {
             OrderItemOption::insert($orderItemOptions);
         }
+    }
+
+    private function sendNewOrderNotification(string|int $branchId): void
+    {
+        User::query()
+            ->role(UserRole::EMPLOYEE)
+            ->where('branch_id', $branchId)
+            ->each(function (User $employee): void {
+                $employee->notify(
+                    Notification::make('new_order')
+                        ->success()
+                        ->title(__('New order'))
+                        ->body(__('A new order has been placed.'))
+                        ->toDatabase()
+                );
+            });
     }
 }

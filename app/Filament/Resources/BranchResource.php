@@ -69,7 +69,7 @@ class BranchResource extends Resource
                     ->searchable(['name_en', 'name_ar']),
                 Tables\Columns\TextColumn::make('address_' . app()->getLocale())
                     ->label(__('Address'))
-                    ->limit(50)
+                    ->limit(30)
                     ->searchable(['address_en', 'address_ar']),
                 PhoneColumn::make('phone')
                     ->label(__('Phone')),
