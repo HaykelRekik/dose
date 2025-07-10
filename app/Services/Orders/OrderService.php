@@ -28,12 +28,12 @@ final class OrderService
      */
     public function createOrder(array $data, Collection $products): Order
     {
-        return DB::transaction(function () use ($data, $products) {
+        return DB::transaction(callback: function () use ($data, $products) {
             $hydratedCart = $this->buildHydratedCart($data['items'], $products);
 
             $totals = $this->calculateTotals($hydratedCart);
 
-            $order = Order::create([
+            $order = Order::create(attributes: [
                 'user_id' => auth()->id(),
                 'branch_id' => $data['branch_id'],
                 'status' => OrderStatus::PENDING,
@@ -45,12 +45,13 @@ final class OrderService
                 'customer_note' => $data['customer_note'] ?? null,
             ]);
 
-            $this->createOrderItems($order, $hydratedCart);
+            $this->createOrderItems(order: $order, hydratedCart: $hydratedCart);
 
-            $order->load('items.options.option', 'items.options.optionGroup');
+            $order->loadMissing(relations: ['items.options.option', 'items.options.optionGroup']);
 
-            $order->update(['order_snapshot' => $order->toArray()]);
+            $order->update(attributes: ['order_snapshot' => $order->toArray()]);
 
+            /** @var Order $order */
             $this->sendNewOrderNotification(branchId: $order->branch_id);
 
             return $order;
